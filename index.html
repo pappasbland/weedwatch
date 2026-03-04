@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeedWatch — Reclaim Your Patch</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --soil: #1a1208; --fern: #5a7a2e; --sage: #8aab5c;
+    --lichen: #b8c99a; --cream: #f2eddf; --rust: #c4531a;
+    --amber: #e8930a; --edible: #4caf7d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--soil); color:var(--cream); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image: radial-gradient(ellipse at 20% 50%, rgba(90,122,46,.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(62,74,30,.12) 0%, transparent 50%);
+  }
+  .container { position:relative; z-index:1; max-width:860px; margin:0 auto; padding:0 24px 80px; }
+
+  header { padding:52px 0 40px; border-bottom:1px solid rgba(138,171,92,.2); margin-bottom:56px; }
+  .eyebrow { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--sage); margin-bottom:16px; }
+  h1 { font-family:'Playfair Display',serif; font-size:clamp(48px,8vw,80px); font-weight:900; line-height:.92; color:var(--cream); margin-bottom:20px; }
+  h1 em { font-style:italic; color:var(--sage); }
+  .tagline { font-size:15px; color:var(--lichen); font-weight:300; max-width:520px; line-height:1.6; }
+
+  .search-section { margin-bottom:56px; }
+  .search-label { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); display:block; margin-bottom:12px; }
+  .zip-row { display:flex; gap:12px; align-items:stretch; flex-wrap:wrap; }
+  .zip-input { font-family:'Playfair Display',serif; font-size:28px; font-weight:700; background:rgba(242,237,223,.06); border:1.5px solid rgba(138,171,92,.25); color:var(--cream); padding:14px 20px; border-radius:6px; width:200px; letter-spacing:.1em; transition:border-color .2s,background .2s; outline:none; }
+  .zip-input::placeholder { color:rgba(242,237,223,.2); }
+  .zip-input:focus { border-color:var(--sage); background:rgba(242,237,223,.09); }
+  .search-btn { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.15em; text-transform:uppercase; background:var(--fern); color:var(--cream); border:none; padding:14px 28px; border-radius:6px; cursor:pointer; transition:background .2s,transform .15s; white-space:nowrap; }
+  .search-btn:hover { background:var(--sage); transform:translateY(-1px); }
+  .search-btn:active { transform:translateY(0); }
+  .search-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+  .loading { display:none; padding:48px 0; text-align:center; }
+  .loading.visible { display:block; }
+  .loading-text { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.15em; color:var(--sage); animation:pulse 1.5s ease-in-out infinite; }
+  .loading-dots { display:inline-block; width:20px; text-align:left; }
+  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+  .error-msg { display:none; font-family:'DM Mono',monospace; font-size:12px; color:var(--rust); margin-top:12px; padding:10px 16px; border:1px solid rgba(196,83,26,.3); border-radius:4px; background:rgba(196,83,26,.06); }
+  .error-msg.visible { display:block; }
+
+  #results { display:none; }
+  #results.visible { display:block; }
+  .results-header { margin-bottom:40px; }
+  .region-title { font-family:'Playfair Display',serif; font-size:13px; font-style:italic; color:var(--lichen); margin-bottom:8px; }
+  .results-headline { font-family:'Playfair Display',serif; font-size:clamp(22px,4vw,32px); font-weight:700; color:var(--cream); line-height:1.2; margin-bottom:16px; }
+  .seasonal-note { font-size:13px; color:var(--lichen); font-weight:300; line-height:1.6; padding:16px 20px; border-left:2px solid var(--fern); background:rgba(90,122,46,.08); border-radius:0 4px 4px 0; margin-bottom:40px; }
+
+  .species-grid { display:flex; flex-direction:column; gap:4px; }
+  .species-card { background:rgba(242,237,223,.04); border:1px solid rgba(138,171,92,.12); border-radius:8px; overflow:hidden; transition:border-color .2s; animation:slideIn .4s ease both; }
+  .species-card:hover { border-color:rgba(138,171,92,.3); }
+  @keyframes slideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+  .card-header { display:flex; align-items:stretch; cursor:pointer; user-select:none; min-height:88px; }
+  .rank-badge { font-family:'Playfair Display',serif; font-size:22px; font-weight:900; font-style:italic; color:rgba(138,171,92,.25); width:56px; text-align:center; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .card-meta { flex:1; padding:16px 12px 16px 0; display:flex; flex-direction:column; justify-content:center; min-width:0; }
+  .name-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+  .species-common { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--cream); line-height:1.2; }
+  .edible-badge { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:10px; background:rgba(76,175,125,.15); color:var(--edible); border:1px solid rgba(76,175,125,.35); white-space:nowrap; flex-shrink:0; }
+  .species-latin { font-family:'DM Mono',monospace; font-size:10px; font-style:italic; color:var(--sage); letter-spacing:.05em; margin-bottom:6px; }
+  .spread-pill { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:10px; }
+  .spread-aggressive { background:rgba(212,56,13,.15); color:#f07050; border:1px solid rgba(212,56,13,.3); }
+  .spread-persistent  { background:rgba(232,147,10,.12); color:var(--amber); border:1px solid rgba(232,147,10,.25); }
+  .spread-spreading   { background:rgba(138,171,92,.12); color:var(--sage); border:1px solid rgba(138,171,92,.25); }
+
+  .hero-wrap { width:110px; flex-shrink:0; position:relative; overflow:hidden; background:rgba(255,255,255,.03); border-left:1px solid rgba(138,171,92,.1); }
+  .hero-img { width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity .5s ease; }
+  .hero-img.loaded { opacity:1; }
+  .hero-placeholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:28px; opacity:.15; }
+  .hero-credit { position:absolute; bottom:0; left:0; right:0; font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,255,255,.5); background:linear-gradient(transparent,rgba(0,0,0,.55)); padding:12px 5px 4px; text-align:center; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hero-credit a { color:rgba(255,255,255,.6); text-decoration:none; }
+
+  .expand-col { width:36px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .expand-icon { font-size:18px; color:var(--sage); transition:transform .25s; opacity:.6; }
+  .species-card.open .expand-icon { transform:rotate(45deg); opacity:1; }
+
+  .card-body { display:none; padding:0 20px 24px 56px; border-top:1px solid rgba(138,171,92,.1); }
+  .species-card.open .card-body { display:block; }
+  @media(max-width:580px){ .card-body{ padding-left:12px; } .hero-wrap{ width:80px; } }
+
+  .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px; }
+  @media(max-width:580px){ .detail-grid{ grid-template-columns:1fr; } }
+
+  .detail-block h4 { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:8px; }
+  .detail-block p { font-size:13.5px; color:var(--lichen); line-height:1.65; font-weight:300; }
+
+  .block-season { grid-column:1/-1; background:rgba(90,122,46,.1); border:1px solid rgba(138,171,92,.2); border-radius:6px; padding:14px 18px; }
+  .block-season h4 { color:#a8d88a; }
+  .block-season p  { color:var(--cream); }
+
+  .block-edible { grid-column:1/-1; background:rgba(76,175,125,.08); border:1px solid rgba(76,175,125,.25); border-radius:6px; padding:14px 18px; }
+  .block-edible h4 { color:var(--edible); }
+  .block-edible p  { color:var(--cream); }
+
+  .block-controls { grid-column:1/-1; }
+  .block-controls h4 { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:12px; }
+  .control-row { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
+  .ctrl-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.12em; text-transform:uppercase; padding:3px 8px; border-radius:3px; white-space:nowrap; margin-top:2px; flex-shrink:0; min-width:82px; text-align:center; }
+  .ctrl-mechanical { background:rgba(138,171,92,.15); color:var(--sage); border:1px solid rgba(138,171,92,.3); }
+  .ctrl-cultural   { background:rgba(232,147,10,.1); color:var(--amber); border:1px solid rgba(232,147,10,.25); }
+  .ctrl-chemical   { background:rgba(196,83,26,.1); color:#f07050; border:1px solid rgba(196,83,26,.25); }
+  .ctrl-text { font-size:13px; color:var(--lichen); line-height:1.6; font-weight:300; }
+  .ctrl-warning { font-size:11px; color:rgba(240,112,80,.75); font-style:italic; margin-top:4px; }
+
+  .inat-link { margin-top:16px; font-family:'DM Mono',monospace; font-size:11px; color:rgba(138,171,92,.5); letter-spacing:.05em; }
+  .inat-link a { color:var(--sage); text-decoration:none; border-bottom:1px solid rgba(138,171,92,.3); transition:color .2s; }
+  .inat-link a:hover { color:var(--cream); }
+
+  .footer-note { margin-top:60px; padding-top:24px; border-top:1px solid rgba(138,171,92,.12); font-family:'DM Mono',monospace; font-size:11px; color:rgba(138,171,92,.4); line-height:1.8; letter-spacing:.03em; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="eyebrow">Field Guide · Habitat Stewardship Trainer</div>
+    <h1>Weed<em>Watch</em></h1>
+    <p class="tagline">Identify the fast-spreading plants crowding out natives in your region. Learn to recognize them, manage them thoughtfully, and give your local wildlife and pollinators room to thrive.</p>
+  </header>
+
+  <section class="search-section">
+    <label class="search-label" for="zipInput">Enter your zip code to see what's crowding out natives near you</label>
+    <div class="zip-row">
+      <input class="zip-input" id="zipInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="12345" />
+      <button class="search-btn" id="searchBtn" onclick="fetchSpecies()">Show What's Taking Over →</button>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </section>
+
+  <div class="loading" id="loading">
+    <div class="loading-text">BUILDING YOUR REGIONAL GUIDE<span class="loading-dots" id="dots">...</span></div>
+  </div>
+
+  <div id="results">
+    <div class="results-header">
+      <div class="region-title" id="regionTitle"></div>
+      <div class="results-headline" id="resultsHeadline"></div>
+      <div class="seasonal-note" id="seasonalNote"></div>
+    </div>
+    <div class="species-grid" id="speciesGrid"></div>
+    <div class="footer-note">
+      Plant information is AI-generated based on regional ecology and current season. Photos via iNaturalist (CC BY-NC). For persistent infestations, your local cooperative extension office or native plant society is a wonderful free resource.
+    </div>
+  </div>
+</div>
+
+<script>
+let dotInterval;
+function startDots() {
+  let n=0;
+  dotInterval = setInterval(()=>{ n=(n+1)%4; document.getElementById('dots').textContent='.'.repeat(n+1); },400);
+}
+function stopDots() { clearInterval(dotInterval); }
+
+function getSeason() {
+  const m = new Date().getMonth();
+  if(m>=2&&m<=4) return 'spring';
+  if(m>=5&&m<=7) return 'summer';
+  if(m>=8&&m<=10) return 'fall';
+  return 'winter';
+}
+const seasonEmoji = {spring:'🌱',summer:'☀️',fall:'🍂',winter:'❄️'};
+const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+
+async function zipToCoords(zip) {
+  const r = await fetch(`https://api.zippopotam.us/us/${zip}`);
+  if(!r.ok) throw new Error('zip_not_found');
+  const d = await r.json();
+  return {
+    lat: parseFloat(d.places[0].latitude),
+    lon: parseFloat(d.places[0].longitude),
+    city: d.places[0]['place name'],
+    state: d.places[0]['state abbreviation']
+  };
+}
+
+async function fetchHeroPhoto(latinName, lat, lon, month) {
+  const months = [month, month===1?12:month-1, month===12?1:month+1];
+  for(const m of months) {
+    try {
+      const url = new URL('https://api.inaturalist.org/v1/observations');
+      url.searchParams.set('taxon_name', latinName);
+      url.searchParams.set('lat', lat);
+      url.searchParams.set('lng', lon);
+      url.searchParams.set('radius', 200);
+      url.searchParams.set('month', m);
+      url.searchParams.set('quality_grade', 'research');
+      url.searchParams.set('photos', true);
+      url.searchParams.set('order_by', 'votes');
+      url.searchParams.set('per_page', 1);
+      const r = await fetch(url);
+      const d = await r.json();
+      if(d.results&&d.results.length&&d.results[0].photos&&d.results[0].photos.length) {
+        const obs = d.results[0];
+        const photo = obs.photos[0];
+        return { src: photo.url.replace('square','medium'), observer: obs.user.login, obsId: obs.id };
+      }
+    } catch(e) {}
+  }
+  return null;
+}
+
+function toggleCard(card) { card.classList.toggle('open'); }
+
+function renderSpecies(data, coords) {
+  const season = getSeason();
+  const month = new Date().getMonth()+1;
+  document.getElementById('regionTitle').textContent = data.region;
+  document.getElementById('resultsHeadline').textContent = data.headline;
+  document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> ${data.seasonalNote}`;
+
+  const grid = document.getElementById('speciesGrid');
+  grid.innerHTML = '';
+
+  data.species.forEach((sp, i) => {
+    const card = document.createElement('div');
+    card.className = 'species-card';
+    card.style.animationDelay = `${i*60}ms`;
+
+    const spreadClass = sp.spreadRate==='Aggressive'?'spread-aggressive':sp.spreadRate==='Persistent'?'spread-persistent':'spread-spreading';
+    const inatUrl = `https://www.inaturalist.org/search?q=${encodeURIComponent(sp.latinName)}`;
+    const edibleBadge = sp.isEdible?`<span class="edible-badge">🍽️ Edible</span>`:'';
+    const edibleBlock = sp.isEdible?`
+      <div class="detail-block block-edible">
+        <h4>🍽️ Foraging Notes</h4>
+        <p>${sp.foragingNote}</p>
+      </div>`:'';
+    const forageWarning = sp.isEdible?`<div class="ctrl-warning">⚠️ If you're foraging this plant, don't treat it with herbicides.</div>`:'';
+    const controlsHtml = (sp.controls||[]).map(c=>{
+      const cls = c.type==='Mechanical'?'ctrl-mechanical':c.type==='Cultural'?'ctrl-cultural':'ctrl-chemical';
+      const warn = c.type==='Chemical'?forageWarning:'';
+      return `<div class="control-row"><span class="ctrl-label ${cls}">${c.type}</span><div><div class="ctrl-text">${c.description}</div>${warn}</div></div>`;
+    }).join('');
+
+    const heroId = `hero-${i}`;
+
+    card.innerHTML = `
+      <div class="card-header" onclick="toggleCard(this.parentElement)">
+        <div class="rank-badge">${i+1}</div>
+        <div class="card-meta">
+          <div class="name-row">
+            <span class="species-common">${sp.commonName}</span>
+            ${edibleBadge}
+          </div>
+          <div class="species-latin">${sp.latinName}</div>
+          <div><span class="spread-pill ${spreadClass}">${sp.spreadRate}</span></div>
+        </div>
+        <div class="hero-wrap" id="${heroId}">
+          <div class="hero-placeholder">🌿</div>
+        </div>
+        <div class="expand-col"><span class="expand-icon">+</span></div>
+      </div>
+      <div class="card-body">
+        <div class="detail-grid">
+          <div class="detail-block">
+            <h4>Why It Outcompetes Natives</h4>
+            <p>${sp.whyItSpreads}</p>
+          </div>
+          <div class="detail-block">
+            <h4>How to Identify</h4>
+            <p>${sp.howToIdentify}</p>
+          </div>
+          <div class="detail-block block-season">
+            <h4>${seasonEmoji[season]} What to Look For This ${cap(season)}</h4>
+            <p>${sp.seasonalTip}</p>
+          </div>
+          <div class="detail-block">
+            <h4>What It Displaces</h4>
+            <p>${sp.whatItDisplaces}</p>
+          </div>
+          ${edibleBlock}
+          <div class="detail-block block-controls">
+            <h4>How to Manage It</h4>
+            ${controlsHtml}
+          </div>
+        </div>
+        <div class="inat-link">📸 More photos across all seasons: <a href="${inatUrl}" target="_blank">iNaturalist observations →</a></div>
+      </div>
+    `;
+    grid.appendChild(card);
+
+    fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month).then(photo => {
+      const wrap = document.getElementById(heroId);
+      if(!wrap) return;
+      if(photo) {
+        wrap.innerHTML = `
+          <img class="hero-img" src="${photo.src}" alt="${sp.commonName}" />
+          <div class="hero-credit"><a href="https://www.inaturalist.org/observations/${photo.obsId}" target="_blank">© ${photo.observer}</a></div>
+        `;
+        const img = wrap.querySelector('.hero-img');
+        img.onload = () => img.classList.add('loaded');
+        img.onerror = () => { wrap.innerHTML = '<div class="hero-placeholder">🌿</div>'; };
+      }
+    });
+  });
+
+  document.getElementById('results').classList.add('visible');
+}
+
+async function fetchSpecies() {
+  const zip = document.getElementById('zipInput').value.trim();
+  if(!/^\d{5}$/.test(zip)){
+    const e = document.getElementById('errorMsg');
+    e.textContent='Please enter a valid 5-digit US zip code.';
+    e.classList.add('visible');
+    return;
+  }
+  document.getElementById('errorMsg').classList.remove('visible');
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('loading').classList.add('visible');
+  document.getElementById('searchBtn').disabled = true;
+  startDots();
+
+  const season = getSeason();
+  const today = new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+  try {
+    const coords = await zipToCoords(zip);
+
+    const prompt = `You are an expert botanist, native plant advocate, and restoration ecologist for the United States.
+
+A home gardener wants to help native plants, pollinators, and local wildlife by learning which fast-spreading plants are crowding out natives on their property. Your tone is empowering and practical — this is about giving nature room to thrive.
+
+Zip code: ${zip} (${coords.city}, ${coords.state})
+Today's date: ${today}
+Current season: ${season}
+
+Return ONLY a raw JSON object (no markdown, no backticks) with this structure:
+{
+  "region": "Specific region e.g. 'Western New England, Connecticut River Valley'",
+  "headline": "Short empowering phrase specific to this region",
+  "seasonalNote": "One sentence: what fast-spreading plants are doing RIGHT NOW in this specific region in ${season}. Be specific to actual current conditions — late winter, early spring, snowcover, etc.",
+  "species": [
+    {
+      "commonName": "Common name",
+      "latinName": "Genus species",
+      "spreadRate": "Aggressive" or "Persistent" or "Spreading",
+      "isEdible": true or false,
+      "foragingNote": "Only if isEdible true: exact harvest window, preparation, and note that repeated harvesting is itself a management strategy. Be precise about safety.",
+      "whyItSpreads": "2 sentences on ecological mechanisms",
+      "howToIdentify": "2-3 sentences on key visual ID features across seasons",
+      "seasonalTip": "What this plant looks like or is doing specifically RIGHT NOW in ${season} in this region. Single most useful action a gardener can take today.",
+      "whatItDisplaces": "1-2 sentences on native plants, pollinators, or wildlife that lose out",
+      "controls": [
+        { "type": "Mechanical", "description": "Specific technique, timing, root depth, regrowth expectations" },
+        { "type": "Cultural", "description": "Planting natives, mulching, or other ecological approaches" },
+        { "type": "Chemical", "description": "Last resort only. Specific herbicide, method, timing. Frame clearly as last resort." }
+      ]
+    }
+  ]
+}
+
+Return the 10 most ecologically impactful fast-spreading plants for this specific region, ordered by impact. Be precise to this location's actual ecology.`;
+
+    // Call our secure backend proxy instead of Anthropic directly
+    const resp = await fetch('/api/species', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+
+    const aiData = await resp.json();
+    if(aiData.stop_reason==='max_tokens') throw new Error('truncated');
+    const text = aiData.content.map(b=>b.text||'').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+
+    stopDots();
+    document.getElementById('loading').classList.remove('visible');
+    document.getElementById('searchBtn').disabled = false;
+    renderSpecies(parsed, coords);
+
+  } catch(err) {
+    stopDots();
+    document.getElementById('loading').classList.remove('visible');
+    document.getElementById('searchBtn').disabled = false;
+    const e = document.getElementById('errorMsg');
+    if(err.message==='zip_not_found') e.textContent='Zip code not found. Please check and try again.';
+    else if(err.message==='truncated') e.textContent='Response was cut off — please try again.';
+    else e.textContent='Something went wrong generating your plant guide. Please try again.';
+    e.classList.add('visible');
+    console.error(err);
+  }
+}
+
+document.getElementById('zipInput').addEventListener('keydown', e => {
+  if(e.key==='Enter') fetchSpecies();
+});
+</script>
+</body>
+</html>
