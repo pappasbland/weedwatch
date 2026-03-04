@@ -37,13 +37,33 @@
   .search-btn:active { transform:translateY(0); }
   .search-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
-  /* Loading */
-  .loading { display:none; padding:56px 0; text-align:center; }
+  /* Loading — calm pulse only, no movement */
+  .loading { display:none; padding:64px 0; text-align:center; }
   .loading.visible { display:block; }
-  .loading-main { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:24px; animation:pulse 1.5s ease-in-out infinite; }
-  .loading-prompt { font-family:'Playfair Display',serif; font-size:18px; font-style:italic; color:var(--lichen); max-width:400px; margin:0 auto; line-height:1.7; opacity:0; transition:opacity .8s ease; }
-  .loading-prompt.visible { opacity:1; }
-  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+  .loading-main {
+    font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--sage);
+    animation:gentlePulse 2.5s ease-in-out infinite;
+    margin-bottom:32px;
+  }
+  .loading-dots { display:inline-block; width:24px; text-align:left; }
+  @keyframes gentlePulse {
+    0%,100% { opacity:.35; }
+    50%      { opacity:1; }
+  }
+  /* Single prompt — fades in once, stays */
+  .loading-prompt {
+    font-family:'Playfair Display',serif;
+    font-size:19px;
+    font-style:italic;
+    color:var(--lichen);
+    max-width:400px;
+    margin:0 auto;
+    line-height:1.75;
+    opacity:0;
+    transition:opacity 1.8s ease;
+  }
+  .loading-prompt.visible { opacity:.75; }
 
   .error-msg { display:none; font-family:'DM Mono',monospace; font-size:12px; color:var(--rust); margin-top:12px; padding:10px 16px; border:1px solid rgba(196,83,26,.3); border-radius:4px; background:rgba(196,83,26,.06); }
   .error-msg.visible { display:block; }
@@ -140,7 +160,7 @@
   </section>
 
   <div class="loading" id="loading">
-    <div class="loading-main">Building your regional guide<span id="dots">...</span></div>
+    <div class="loading-main">Building your regional guide<span class="loading-dots" id="dots">...</span></div>
     <div class="loading-prompt" id="loadingPrompt"></div>
   </div>
 
@@ -159,19 +179,18 @@
 </div>
 
 <script>
-let dotInterval, promptInterval;
+let dotInterval;
 
+// One prompt chosen at random, shown once, stays
 const loadingPrompts = [
-  "Step outside. Take a slow breath. What do you smell right now?",
-  "While you wait — notice the light. How has it changed this week?",
-  "Look at the nearest tree. Is anything stirring in its branches?",
-  "The soil beneath your feet is full of life. Billions of organisms, all working.",
+  "While you wait — step outside if you can. What do you notice?",
+  "Take a slow breath. What season does the air smell like today?",
+  "Look at the nearest tree. Is anything stirring yet?",
+  "Every plant you learn today is space you're making for something native.",
   "What was the last bird you heard this morning?",
-  "Every plant you learn today is one more native you're making room for.",
-  "Notice the edge where your lawn meets the wild. That border is where the action is.",
-  "What does the sky look like right now? Take a moment to really look.",
-  "The plants on their way to you have been here longer than any of us.",
-  "What native plant would you most like to see return to your land?",
+  "The soil beneath your feet holds more life than you can imagine.",
+  "What native plant would you most love to see return to your land?",
+  "Notice the light. How has it shifted in the last few weeks?",
 ];
 
 function startLoading() {
@@ -179,27 +198,19 @@ function startLoading() {
   dotInterval = setInterval(() => {
     n = (n+1) % 4;
     document.getElementById('dots').textContent = '.'.repeat(n+1);
-  }, 400);
+  }, 500);
 
+  // Pick one prompt at random, fade it in after a short delay, never change it
   const promptEl = document.getElementById('loadingPrompt');
-  let pi = Math.floor(Math.random() * loadingPrompts.length);
-  promptEl.textContent = loadingPrompts[pi];
-  setTimeout(() => promptEl.classList.add('visible'), 200);
-
-  promptInterval = setInterval(() => {
-    promptEl.classList.remove('visible');
-    setTimeout(() => {
-      pi = (pi + 1) % loadingPrompts.length;
-      promptEl.textContent = loadingPrompts[pi];
-      promptEl.classList.add('visible');
-    }, 900);
-  }, 4500);
+  const pick = loadingPrompts[Math.floor(Math.random() * loadingPrompts.length)];
+  promptEl.textContent = pick;
+  setTimeout(() => promptEl.classList.add('visible'), 800);
 }
 
 function stopLoading() {
   clearInterval(dotInterval);
-  clearInterval(promptInterval);
-  document.getElementById('loadingPrompt').classList.remove('visible');
+  const promptEl = document.getElementById('loadingPrompt');
+  promptEl.classList.remove('visible');
 }
 
 function getSeason() {
@@ -238,6 +249,11 @@ const extensionLinks = {
   WV:'https://extension.wvu.edu',WI:'https://extension.wisc.edu',
   WY:'https://www.uwyo.edu/uwext'
 };
+
+// Build a search URL that lands on invasive plant results for that extension site
+function extensionSearchUrl(baseUrl, state) {
+  return `${baseUrl}/search?q=invasive+plants`;
+}
 
 async function zipToCoords(zip) {
   const r = await fetch(`https://api.zippopotam.us/us/${zip}`);
@@ -286,11 +302,12 @@ function renderSpecies(data, coords) {
   document.getElementById('resultsHeadline').textContent = data.headline;
   document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> ${data.seasonalNote}`;
 
-  // Extension office link
-  const extUrl = extensionLinks[coords.state];
+  // Extension office link — search URL so it's always useful from the first click
+  const baseUrl = extensionLinks[coords.state];
   const extEl = document.getElementById('extLink');
-  if(extUrl) {
-    extEl.innerHTML = `🌿 <strong>Your local expert resource:</strong> <a href="${extUrl}" target="_blank">${coords.state} Cooperative Extension Service →</a><br><span style="font-size:10px;opacity:.65;font-style:italic;">Free identification help, control guidance, and native plant recommendations specific to your state. Near a border? Check your neighboring state's extension too.</span>`;
+  if(baseUrl) {
+    const searchUrl = extensionSearchUrl(baseUrl, coords.state);
+    extEl.innerHTML = `🌿 <strong>Your local expert resource:</strong> <a href="${searchUrl}" target="_blank">${coords.state} Cooperative Extension — invasive plant guidance →</a><br><span style="font-size:10px;opacity:.65;font-style:italic;">Free identification help, control advice, and native plant recommendations specific to your state.</span>`;
   } else {
     extEl.style.display = 'none';
   }
@@ -405,16 +422,23 @@ async function fetchSpecies() {
 
     const prompt = `You are an expert botanist, native plant advocate, and restoration ecologist for the United States.
 
-A home gardener wants to help native plants, pollinators, and local wildlife by learning which fast-spreading plants are crowding out natives on their property. Your tone is empowering and practical — this is about giving nature room to thrive.
+A home gardener wants to help native plants, pollinators, and local wildlife by learning which fast-spreading plants are crowding out natives on their property. Your tone is empowering, warm, and practical — this is about giving nature room to thrive.
 
 Zip code: ${zip} (${coords.city}, ${coords.state})
 Today's date: ${today}
 Current season: ${season}
 
+CRITICAL LANGUAGE RULES — follow these without exception:
+- Never use the word "invasive" anywhere in your response
+- Never use combative or alarmist language
+- The headline must be warm and empowering, focused on what the gardener is creating space FOR — native plants, pollinators, wildlife — not what they are fighting against
+- Good headline examples: "Make room for your Berkshire natives", "Give your Connecticut River Valley wildflowers room to breathe", "Your patch of the Piedmont is worth fighting for"
+- Bad headline examples: anything with "invasive", "battle", "war", "threat", "danger", "fight", "combat"
+
 Return ONLY a raw JSON object (no markdown, no backticks) with this structure:
 {
-  "region": "Specific region e.g. 'Western New England, Connecticut River Valley'",
-  "headline": "Short empowering phrase specific to this region",
+  "region": "Specific region e.g. 'Western New England, Berkshire Hills'",
+  "headline": "Short warm empowering phrase focused on native plants and wildlife — never combative, never uses the word invasive",
   "seasonalNote": "One sentence: what fast-spreading plants are doing RIGHT NOW in this specific region in ${season}. Be specific to actual current conditions — late winter, early spring, snowcover, etc.",
   "species": [
     {
@@ -423,20 +447,20 @@ Return ONLY a raw JSON object (no markdown, no backticks) with this structure:
       "spreadRate": "Aggressive" or "Persistent" or "Spreading",
       "isEdible": true or false,
       "foragingNote": "Only if isEdible true: exact harvest window, preparation, and note that repeated harvesting is itself a management strategy. Be precise about safety.",
-      "whyItSpreads": "2 sentences on ecological mechanisms",
+      "whyItSpreads": "2 sentences on ecological mechanisms — how it outcompetes native plants",
       "howToIdentify": "2-3 sentences on key visual ID features across seasons",
       "seasonalTip": "What this plant looks like or is doing specifically RIGHT NOW in ${season} in this region. Single most useful action a gardener can take today.",
-      "whatItDisplaces": "1-2 sentences on native plants, pollinators, or wildlife that lose out",
+      "whatItDisplaces": "1-2 sentences on native plants, pollinators, or wildlife that lose habitat when this plant dominates",
       "controls": [
         { "type": "Mechanical", "description": "Specific removal technique and timing. Root depth and regrowth risk — be explicit if even small fragments can resprout (e.g. knotweed from 1cm root). ALWAYS include disposal: specify whether removed material must be bagged for landfill, can be burned where legal, or left to dry on pavement. Always warn explicitly if any part must NEVER be composted and explain why. Note if seeds or berries pose a secondary spread risk." },
         { "type": "Cultural", "description": "Planting natives, mulching, or other ecological approaches that give natives a competitive edge" },
-        { "type": "Chemical", "description": "Last resort only. Specific herbicide, method, timing. Frame clearly as last resort for large or inaccessible infestations." }
+        { "type": "Chemical", "description": "Last resort only. Specific herbicide, method, timing. Frame clearly as last resort for large or inaccessible areas." }
       ]
     }
   ]
 }
 
-Return the 10 most ecologically impactful fast-spreading plants for this specific region, ordered by impact. Be precise to this location's actual ecology.`;
+Return the 10 most ecologically impactful fast-spreading plants for this specific region, ordered by impact on native ecosystems. Be precise to this location's actual ecology.`;
 
     const resp = await fetch('/api/species', {
       method: 'POST',
