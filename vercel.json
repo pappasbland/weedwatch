@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/species", "destination": "/api/species.js" }
+    { "source": "/api/species", "destination": "/api/species.cjs" }
   ]
 }
