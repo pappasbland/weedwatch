@@ -6,15 +6,21 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
 
+  const raw = await new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => data += chunk);
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
+
   let prompt;
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    prompt = body.prompt;
+    prompt = JSON.parse(raw).prompt;
   } catch(e) {
-    return res.status(400).json({ error: 'Bad request body' });
+    return res.status(400).json({ error: 'Bad body: ' + raw.slice(0, 100) });
   }
 
-  if (!prompt) return res.status(400).json({ error: 'No prompt' });
+  if (!prompt) return res.status(400).json({ error: 'No prompt found' });
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
