@@ -37,11 +37,13 @@
   .search-btn:active { transform:translateY(0); }
   .search-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
-  .loading { display:none; padding:48px 0; text-align:center; }
+  /* Loading */
+  .loading { display:none; padding:56px 0; text-align:center; }
   .loading.visible { display:block; }
-  .loading-text { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:.15em; color:var(--sage); animation:pulse 1.5s ease-in-out infinite; }
-  .loading-dots { display:inline-block; width:20px; text-align:left; }
-  @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+  .loading-main { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:24px; animation:pulse 1.5s ease-in-out infinite; }
+  .loading-prompt { font-family:'Playfair Display',serif; font-size:18px; font-style:italic; color:var(--lichen); max-width:400px; margin:0 auto; line-height:1.7; opacity:0; transition:opacity .8s ease; }
+  .loading-prompt.visible { opacity:1; }
+  @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
 
   .error-msg { display:none; font-family:'DM Mono',monospace; font-size:12px; color:var(--rust); margin-top:12px; padding:10px 16px; border:1px solid rgba(196,83,26,.3); border-radius:4px; background:rgba(196,83,26,.06); }
   .error-msg.visible { display:block; }
@@ -58,10 +60,7 @@
   .species-card:hover { border-color:rgba(138,171,92,.3); }
   @keyframes slideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
-  /* Card header — image on the LEFT */
   .card-header { display:flex; align-items:stretch; cursor:pointer; user-select:none; min-height:88px; }
-
-  /* Hero image — now first in the flex row */
   .hero-wrap { width:110px; flex-shrink:0; position:relative; overflow:hidden; background:rgba(255,255,255,.03); border-right:1px solid rgba(138,171,92,.1); }
   .hero-img { width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity .5s ease; }
   .hero-img.loaded { opacity:1; }
@@ -74,7 +73,6 @@
   .name-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
   .species-common { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--cream); line-height:1.2; }
   .edible-badge { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:10px; background:rgba(76,175,125,.15); color:var(--edible); border:1px solid rgba(76,175,125,.35); white-space:nowrap; flex-shrink:0; }
-  /* Latin name — bumped up from 10px to 13px */
   .species-latin { font-family:'DM Mono',monospace; font-size:13px; font-style:italic; color:var(--sage); letter-spacing:.05em; margin-bottom:6px; }
   .spread-pill { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:10px; }
   .spread-aggressive { background:rgba(212,56,13,.15); color:#f07050; border:1px solid rgba(212,56,13,.3); }
@@ -117,7 +115,11 @@
   .inat-link a { color:var(--sage); text-decoration:none; border-bottom:1px solid rgba(138,171,92,.3); transition:color .2s; }
   .inat-link a:hover { color:var(--cream); }
 
-  .footer-note { margin-top:60px; padding-top:24px; border-top:1px solid rgba(138,171,92,.12); font-family:'DM Mono',monospace; font-size:11px; color:rgba(138,171,92,.4); line-height:1.8; letter-spacing:.03em; }
+  .footer-ext { margin-top:40px; padding:16px 20px; border:1px solid rgba(138,171,92,.2); border-radius:6px; background:rgba(90,122,46,.06); font-family:'DM Mono',monospace; font-size:12px; color:var(--lichen); letter-spacing:.04em; line-height:1.8; }
+  .footer-ext a { color:var(--sage); text-decoration:none; border-bottom:1px solid rgba(138,171,92,.3); transition:color .2s; }
+  .footer-ext a:hover { color:var(--cream); }
+
+  .footer-note { margin-top:20px; padding-top:24px; border-top:1px solid rgba(138,171,92,.12); font-family:'DM Mono',monospace; font-size:11px; color:rgba(138,171,92,.4); line-height:1.8; letter-spacing:.03em; }
 </style>
 </head>
 <body>
@@ -138,7 +140,8 @@
   </section>
 
   <div class="loading" id="loading">
-    <div class="loading-text">BUILDING YOUR REGIONAL GUIDE<span class="loading-dots" id="dots">...</span></div>
+    <div class="loading-main">Building your regional guide<span id="dots">...</span></div>
+    <div class="loading-prompt" id="loadingPrompt"></div>
   </div>
 
   <div id="results">
@@ -148,19 +151,56 @@
       <div class="seasonal-note" id="seasonalNote"></div>
     </div>
     <div class="species-grid" id="speciesGrid"></div>
+    <div class="footer-ext" id="extLink"></div>
     <div class="footer-note">
-      Plant information is AI-generated based on regional ecology and current season. Photos via iNaturalist (CC BY-NC). For persistent infestations, your local cooperative extension office or native plant society is a wonderful free resource.
+      Plant information is AI-generated based on regional ecology and current season. Photos via iNaturalist (CC BY-NC).
     </div>
   </div>
 </div>
 
 <script>
-let dotInterval;
-function startDots() {
-  let n=0;
-  dotInterval = setInterval(()=>{ n=(n+1)%4; document.getElementById('dots').textContent='.'.repeat(n+1); },400);
+let dotInterval, promptInterval;
+
+const loadingPrompts = [
+  "Step outside. Take a slow breath. What do you smell right now?",
+  "While you wait — notice the light. How has it changed this week?",
+  "Look at the nearest tree. Is anything stirring in its branches?",
+  "The soil beneath your feet is full of life. Billions of organisms, all working.",
+  "What was the last bird you heard this morning?",
+  "Every plant you learn today is one more native you're making room for.",
+  "Notice the edge where your lawn meets the wild. That border is where the action is.",
+  "What does the sky look like right now? Take a moment to really look.",
+  "The plants on their way to you have been here longer than any of us.",
+  "What native plant would you most like to see return to your land?",
+];
+
+function startLoading() {
+  let n = 0;
+  dotInterval = setInterval(() => {
+    n = (n+1) % 4;
+    document.getElementById('dots').textContent = '.'.repeat(n+1);
+  }, 400);
+
+  const promptEl = document.getElementById('loadingPrompt');
+  let pi = Math.floor(Math.random() * loadingPrompts.length);
+  promptEl.textContent = loadingPrompts[pi];
+  setTimeout(() => promptEl.classList.add('visible'), 200);
+
+  promptInterval = setInterval(() => {
+    promptEl.classList.remove('visible');
+    setTimeout(() => {
+      pi = (pi + 1) % loadingPrompts.length;
+      promptEl.textContent = loadingPrompts[pi];
+      promptEl.classList.add('visible');
+    }, 900);
+  }, 4500);
 }
-function stopDots() { clearInterval(dotInterval); }
+
+function stopLoading() {
+  clearInterval(dotInterval);
+  clearInterval(promptInterval);
+  document.getElementById('loadingPrompt').classList.remove('visible');
+}
 
 function getSeason() {
   const m = new Date().getMonth();
@@ -171,6 +211,33 @@ function getSeason() {
 }
 const seasonEmoji = {spring:'🌱',summer:'☀️',fall:'🍂',winter:'❄️'};
 const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+
+const extensionLinks = {
+  AL:'https://www.aces.edu',AK:'https://www.uaf.edu/ces',AZ:'https://extension.arizona.edu',
+  AR:'https://www.uaex.uada.edu',CA:'https://ucanr.edu',CO:'https://extension.colostate.edu',
+  CT:'https://extension.uconn.edu',DE:'https://extension.udel.edu',FL:'https://sfyl.ifas.ufl.edu',
+  GA:'https://extension.uga.edu',HI:'https://www.ctahr.hawaii.edu/site/ExtOutreach.aspx',
+  ID:'https://www.uidaho.edu/extension',IL:'https://extension.illinois.edu',
+  IN:'https://extension.purdue.edu',IA:'https://www.extension.iastate.edu',
+  KS:'https://www.ksre.k-state.edu',KY:'https://extension.ca.uky.edu',
+  LA:'https://www.lsuagcenter.com',ME:'https://extension.umaine.edu',
+  MD:'https://extension.umd.edu',MA:'https://ag.umass.edu/extension',
+  MI:'https://www.canr.msu.edu/outreach',MN:'https://extension.umn.edu',
+  MS:'https://extension.msstate.edu',MO:'https://extension.missouri.edu',
+  MT:'https://www.msuextension.org',NE:'https://extension.unl.edu',
+  NV:'https://extension.unr.edu',NH:'https://extension.unh.edu',
+  NJ:'https://njaes.rutgers.edu',NM:'https://extension.nmsu.edu',
+  NY:'https://cce.cornell.edu',NC:'https://www.ces.ncsu.edu',
+  ND:'https://www.ndsu.edu/extension',OH:'https://extension.osu.edu',
+  OK:'https://extension.okstate.edu',OR:'https://extension.oregonstate.edu',
+  PA:'https://extension.psu.edu',RI:'https://web.uri.edu/extension',
+  SC:'https://www.clemson.edu/extension',SD:'https://extension.sdstate.edu',
+  TN:'https://extension.tennessee.edu',TX:'https://agrilifeextension.tamu.edu',
+  UT:'https://extension.usu.edu',VT:'https://www.uvm.edu/extension',
+  VA:'https://www.ext.vt.edu',WA:'https://extension.wsu.edu',
+  WV:'https://extension.wvu.edu',WI:'https://extension.wisc.edu',
+  WY:'https://www.uwyo.edu/uwext'
+};
 
 async function zipToCoords(zip) {
   const r = await fetch(`https://api.zippopotam.us/us/${zip}`);
@@ -218,6 +285,15 @@ function renderSpecies(data, coords) {
   document.getElementById('regionTitle').textContent = data.region;
   document.getElementById('resultsHeadline').textContent = data.headline;
   document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> ${data.seasonalNote}`;
+
+  // Extension office link
+  const extUrl = extensionLinks[coords.state];
+  const extEl = document.getElementById('extLink');
+  if(extUrl) {
+    extEl.innerHTML = `🌿 <strong>Your local expert resource:</strong> <a href="${extUrl}" target="_blank">${coords.state} Cooperative Extension Service →</a><br><span style="font-size:10px;opacity:.65;font-style:italic;">Free identification help, control guidance, and native plant recommendations specific to your state. Near a border? Check your neighboring state's extension too.</span>`;
+  } else {
+    extEl.style.display = 'none';
+  }
 
   const grid = document.getElementById('speciesGrid');
   grid.innerHTML = '';
@@ -319,7 +395,7 @@ async function fetchSpecies() {
   document.getElementById('results').classList.remove('visible');
   document.getElementById('loading').classList.add('visible');
   document.getElementById('searchBtn').disabled = true;
-  startDots();
+  startLoading();
 
   const season = getSeason();
   const today = new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
@@ -352,9 +428,9 @@ Return ONLY a raw JSON object (no markdown, no backticks) with this structure:
       "seasonalTip": "What this plant looks like or is doing specifically RIGHT NOW in ${season} in this region. Single most useful action a gardener can take today.",
       "whatItDisplaces": "1-2 sentences on native plants, pollinators, or wildlife that lose out",
       "controls": [
-        { "type": "Mechanical", "description": "Specific removal technique and timing. Root depth and regrowth risk — be explicit if even small fragments can resprout (e.g. knotweed from 1cm root). ALWAYS include disposal instructions: specify whether removed material must be bagged for landfill, can be burned where legal, or left to dry — and always warn explicitly if any part must NEVER be composted and why. Mention if seeds or berries on removed material pose a secondary spread risk." },
-        { "type": "Cultural", "description": "Planting natives, mulching, or other ecological approaches" },
-        { "type": "Chemical", "description": "Last resort only. Specific herbicide, method, timing. Frame clearly as last resort." }
+        { "type": "Mechanical", "description": "Specific removal technique and timing. Root depth and regrowth risk — be explicit if even small fragments can resprout (e.g. knotweed from 1cm root). ALWAYS include disposal: specify whether removed material must be bagged for landfill, can be burned where legal, or left to dry on pavement. Always warn explicitly if any part must NEVER be composted and explain why. Note if seeds or berries pose a secondary spread risk." },
+        { "type": "Cultural", "description": "Planting natives, mulching, or other ecological approaches that give natives a competitive edge" },
+        { "type": "Chemical", "description": "Last resort only. Specific herbicide, method, timing. Frame clearly as last resort for large or inaccessible infestations." }
       ]
     }
   ]
@@ -374,13 +450,13 @@ Return the 10 most ecologically impactful fast-spreading plants for this specifi
     const clean = text.replace(/```json|```/g,'').trim();
     const parsed = JSON.parse(clean);
 
-    stopDots();
+    stopLoading();
     document.getElementById('loading').classList.remove('visible');
     document.getElementById('searchBtn').disabled = false;
     renderSpecies(parsed, coords);
 
   } catch(err) {
-    stopDots();
+    stopLoading();
     document.getElementById('loading').classList.remove('visible');
     document.getElementById('searchBtn').disabled = false;
     const e = document.getElementById('errorMsg');
