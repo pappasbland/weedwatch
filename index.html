@@ -365,6 +365,8 @@ Return the 10 most ecologically impactful fast-spreading plants for this specifi
     });
 
     const aiData = await resp.json();
+console.log('Server response:', JSON.stringify(aiData));
+if (!resp.ok) throw new Error('Server error: ' + JSON.stringify(aiData));
     if(aiData.stop_reason==='max_tokens') throw new Error('truncated');
     const text = aiData.content.map(b=>b.text||'').join('');
     const clean = text.replace(/```json|```/g,'').trim();
