@@ -619,10 +619,19 @@ function renderSpecies(data, coords) {
   // Sort: Ideal → Caution → Poor, stable within each group
   const sorted = [...data.species].sort((a, b) => timingOrder(a.controlTiming) - timingOrder(b.controlTiming));
 
+  // Deduplicate by latin name — safety net in case Claude repeats a species
+  const seen = new Set();
+  const deduped = sorted.filter(sp => {
+    const key = sp.latinName.toLowerCase();
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   const grid = document.getElementById('speciesGrid');
   grid.innerHTML = '';
 
-  sorted.forEach((sp, i) => {
+  deduped.forEach((sp, i) => {
     const card = document.createElement('div');
     card.className = 'species-card';
     card.style.animationDelay = `${i*60}ms`;
@@ -765,6 +774,7 @@ CRITICAL LANGUAGE RULES:
 - Never use the word "invasive" anywhere in your response
 - The headline must be warm and empowering, focused on what the gardener is making room FOR
 - Good headline examples: "Make room for your Berkshire natives", "Give your Connecticut River Valley wildflowers room to breathe"
+- Every species in the list must be unique — never repeat the same plant twice
 
 SEASONAL CONTROL TIMING — use exactly these three values, nothing else:
 - "Ideal" = one of the best windows of the year for mechanical or cultural control
