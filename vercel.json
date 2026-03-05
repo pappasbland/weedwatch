@@ -1,1 +1,7 @@
-{}
+{
+  "functions": {
+    "api/species.js": {
+      "maxDuration": 60
+    }
+  }
+}
