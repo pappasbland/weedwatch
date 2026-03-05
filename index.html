@@ -37,13 +37,19 @@
   .search-btn:active { transform:translateY(0); }
   .search-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
+  /* Loading */
   .loading { display:none; padding:64px 0; text-align:center; }
   .loading.visible { display:block; }
   .loading-main { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--sage); animation:gentlePulse 2.5s ease-in-out infinite; margin-bottom:32px; }
   .loading-dots { display:inline-block; width:24px; text-align:left; }
   @keyframes gentlePulse { 0%,100%{opacity:.35} 50%{opacity:1} }
-  .loading-prompt { font-family:'Playfair Display',serif; font-size:19px; font-style:italic; color:var(--lichen); max-width:400px; margin:0 auto; line-height:1.75; opacity:0; transition:opacity 1.8s ease; }
+
+  .loading-prompt { font-family:'Playfair Display',serif; font-size:19px; font-style:italic; color:var(--lichen); max-width:420px; margin:0 auto; line-height:1.75; opacity:0; transition:opacity 1.8s ease; }
   .loading-prompt.visible { opacity:.75; }
+
+  /* Wait message — fades in after 8 seconds */
+  .loading-wait { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; color:rgba(138,171,92,.45); margin-top:24px; opacity:0; transition:opacity 2s ease; }
+  .loading-wait.visible { opacity:1; }
 
   .error-msg { display:none; font-family:'DM Mono',monospace; font-size:12px; color:var(--rust); margin-top:12px; padding:10px 16px; border:1px solid rgba(196,83,26,.3); border-radius:4px; background:rgba(196,83,26,.06); }
   .error-msg.visible { display:block; }
@@ -157,6 +163,7 @@
   <div class="loading" id="loading">
     <div class="loading-main">Building your regional guide<span class="loading-dots" id="dots">...</span></div>
     <div class="loading-prompt" id="loadingPrompt"></div>
+    <div class="loading-wait" id="loadingWait">This usually takes 30–45 seconds — good things are worth the wait.</div>
   </div>
 
   <div id="results">
@@ -174,18 +181,43 @@
 </div>
 
 <script>
-let dotInterval;
+let dotInterval, waitTimeout;
 
-const loadingPrompts = [
-  "While you wait — step outside if you can. What do you notice?",
-  "Take a slow breath. What season does the air smell like today?",
-  "Look at the nearest tree. Is anything stirring yet?",
+// Shuffled pool — no repeats until all prompts have been shown
+const allPrompts = [
+  // Sensory / observational
+  "Step outside if you can. What's the first thing you smell?",
+  "Look up at the nearest tree. Is anything stirring in the branches?",
+  "What was the last bird you heard this morning? Did you see it?",
+  "Notice the light right now. How has it shifted in the past few weeks?",
+  "Find the nearest patch of bare soil. Look closely — what's already moving there?",
+  "Is there standing water anywhere nearby? Snowmelt, puddles, low spots?",
+  "What direction is the wind coming from today?",
+  "Can you hear running water anywhere — a stream, a downspout, a gutter?",
+  "Look at the edges of things — where the lawn meets the woods, where the path meets the field. That's where the action is.",
+  "What's the first thing you'd plant if you had a cleared patch of ground tomorrow?",
+  // Reflective / seasonal
   "Every plant you learn today is space you're making for something native.",
-  "What was the last bird you heard this morning?",
   "The soil beneath your feet holds more life than you can imagine.",
   "What native plant would you most love to see return to your land?",
-  "Notice the light. How has it shifted in the last few weeks?",
+  "What did this land look like 200 years ago? What was growing here before?",
+  "Which patch of your property feels most alive right now, and which feels most depleted?",
+  "What's one small thing you could do for your land this weekend?",
+  "The plants you're about to learn have been outcompeting natives for decades. Today that starts to change.",
+  "Mud season is underway in many places — roots are accessible, ground is soft. Good timing.",
+  "Early spring is one of the best windows for removal — before leafout, before seeds set. You're here at the right moment.",
+  "What would the pollinators on your land thank you for, if they could?",
 ];
+
+let promptPool = [];
+
+function getNextPrompt() {
+  if(promptPool.length === 0) {
+    // Refill and shuffle the pool
+    promptPool = [...allPrompts].sort(() => Math.random() - .5);
+  }
+  return promptPool.pop();
+}
 
 function startLoading() {
   let n = 0;
@@ -193,15 +225,24 @@ function startLoading() {
     n = (n+1) % 4;
     document.getElementById('dots').textContent = '.'.repeat(n+1);
   }, 500);
+
+  // Pick a prompt — no repeats until pool exhausted
   const promptEl = document.getElementById('loadingPrompt');
   promptEl.classList.remove('visible');
-  promptEl.textContent = loadingPrompts[Math.floor(Math.random() * loadingPrompts.length)];
+  promptEl.textContent = getNextPrompt();
   setTimeout(() => promptEl.classList.add('visible'), 800);
+
+  // Wait message fades in after 8 seconds
+  const waitEl = document.getElementById('loadingWait');
+  waitEl.classList.remove('visible');
+  waitTimeout = setTimeout(() => waitEl.classList.add('visible'), 8000);
 }
 
 function stopLoading() {
   clearInterval(dotInterval);
+  clearTimeout(waitTimeout);
   document.getElementById('loadingPrompt').classList.remove('visible');
+  document.getElementById('loadingWait').classList.remove('visible');
 }
 
 function getSeason() {
@@ -253,19 +294,16 @@ async function zipToCoords(zip) {
   };
 }
 
-// Look up iNaturalist taxa ID by latin name — returns a direct taxa URL or falls back to search
 async function fetchInatTaxaUrl(latinName) {
   try {
     const r = await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(latinName)}&per_page=1&rank=species`);
     const d = await r.json();
     if(d.results && d.results.length) {
       const taxon = d.results[0];
-      // Build the clean taxa URL: /taxa/[id]-[Name-With-Hyphens]
       const slug = taxon.name.replace(/\s+/g, '-');
       return `https://www.inaturalist.org/taxa/${taxon.id}-${slug}`;
     }
   } catch(e) {}
-  // Fallback to search if taxa lookup fails
   return `https://www.inaturalist.org/observations?taxon_name=${encodeURIComponent(latinName)}`;
 }
 
@@ -300,9 +338,9 @@ function toggleCard(card) { card.classList.toggle('open'); }
 function timingConfig(rating) {
   if(!rating) return null;
   const r = rating.toLowerCase();
-  if(r.includes('ideal'))   return { cls:'timing-ideal',   pill:'🟢 Ideal Now',    blockCls:'timing-ideal-block',   icon:'🟢' };
-  if(r.includes('caution')) return { cls:'timing-caution', pill:'🟡 Caution',      blockCls:'timing-caution-block', icon:'🟡' };
-  if(r.includes('poor'))    return { cls:'timing-poor',    pill:'🔴 Poor Timing',  blockCls:'timing-poor-block',    icon:'🔴' };
+  if(r.includes('ideal'))   return { cls:'timing-ideal',   pill:'🟢 Ideal Now',   blockCls:'timing-ideal-block',   icon:'🟢' };
+  if(r.includes('caution')) return { cls:'timing-caution', pill:'🟡 Caution',     blockCls:'timing-caution-block', icon:'🟡' };
+  if(r.includes('poor'))    return { cls:'timing-poor',    pill:'🔴 Poor Timing', blockCls:'timing-poor-block',    icon:'🔴' };
   return null;
 }
 
@@ -313,7 +351,6 @@ function renderSpecies(data, coords) {
   document.getElementById('resultsHeadline').textContent = data.headline;
   document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> ${data.seasonalNote}`;
 
-  // Extension link — plain base URL, no search suffix
   const baseUrl = extensionLinks[coords.state];
   const extEl = document.getElementById('extLink');
   if(baseUrl) {
@@ -398,12 +435,11 @@ function renderSpecies(data, coords) {
             ${controlsHtml}
           </div>
         </div>
-        <div class="inat-link" id="${inatLinkId}">📸 All observations across every season: <a href="https://www.inaturalist.org/taxa/${encodeURIComponent(sp.latinName)}" target="_blank">loading iNaturalist page...</a></div>
+        <div class="inat-link" id="${inatLinkId}">📸 All observations across every season: <a href="#" style="opacity:.4">loading...</a></div>
       </div>
     `;
     grid.appendChild(card);
 
-    // Hero photo — non-blocking
     fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month).then(photo => {
       const wrap = document.getElementById(heroId);
       if(!wrap || !photo) return;
@@ -416,7 +452,6 @@ function renderSpecies(data, coords) {
       img.onerror = () => { wrap.innerHTML = '<div class="hero-placeholder">🌿</div>'; };
     });
 
-    // iNaturalist taxa URL — non-blocking lookup
     fetchInatTaxaUrl(sp.latinName).then(taxaUrl => {
       const linkEl = document.getElementById(inatLinkId);
       if(linkEl) {
