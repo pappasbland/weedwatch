@@ -17,25 +17,32 @@ module.exports = async (req, res) => {
   try {
     prompt = JSON.parse(raw).prompt;
   } catch(e) {
-    return res.status(400).json({ error: 'Bad body: ' + raw.slice(0, 100) });
+    return res.status(400).json({ error: 'Bad request body' });
   }
 
   if (!prompt) return res.status(400).json({ error: 'No prompt found' });
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 8000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
 
-  const data = await response.json();
-  return res.status(response.ok ? 200 : response.status).json(data);
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json({ error: data });
+    return res.status(200).json(data);
+
+  } catch (err) {
+    console.error('Anthropic error:', err);
+    return res.status(500).json({ error: err.message });
+  }
 };
