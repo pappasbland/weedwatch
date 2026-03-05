@@ -165,7 +165,7 @@
   <div class="loading" id="loading">
     <div class="loading-main">Building your regional guide<span class="loading-dots" id="dots">...</span></div>
     <div class="loading-prompt" id="loadingPrompt"></div>
-    <div class="loading-wait" id="loadingWait">This usually takes 30–45 seconds — good things are worth the wait.</div>
+    <div class="loading-wait" id="loadingWait">This usually takes 1–2 minutes — we're building a detailed guide just for your region.</div>
   </div>
 
   <div id="results">
@@ -226,7 +226,7 @@ function startLoading() {
   setTimeout(() => promptEl.classList.add('visible'), 800);
   const waitEl = document.getElementById('loadingWait');
   waitEl.classList.remove('visible');
-  waitTimeout = setTimeout(() => waitEl.classList.add('visible'), 8000);
+  waitTimeout = setTimeout(() => waitEl.classList.add('visible'), 5000);
 }
 
 function stopLoading() {
