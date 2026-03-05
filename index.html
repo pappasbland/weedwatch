@@ -22,10 +22,9 @@
 
   header { padding:52px 0 40px; border-bottom:1px solid rgba(138,171,92,.2); margin-bottom:56px; }
   .eyebrow { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--sage); margin-bottom:16px; }
-  /* Clickable logo */
   .logo-link { text-decoration:none; display:inline-block; cursor:pointer; }
-  .logo-link:hover h1 em { color:var(--cream); }
   .logo-link:hover h1 { color:var(--lichen); }
+  .logo-link:hover h1 em { color:var(--cream); }
   h1 { font-family:'Playfair Display',serif; font-size:clamp(48px,8vw,80px); font-weight:900; line-height:.92; color:var(--cream); margin-bottom:20px; transition:color .2s; }
   h1 em { font-style:italic; color:var(--sage); transition:color .2s; }
   .tagline { font-size:15px; color:var(--lichen); font-weight:300; max-width:520px; line-height:1.6; }
@@ -41,14 +40,15 @@
   .search-btn:active { transform:translateY(0); }
   .search-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
-  .loading { display:none; padding:64px 0; text-align:center; }
+  /* Loading — tighter, even spacing between all three elements */
+  .loading { display:none; padding:32px 0 40px; text-align:center; }
   .loading.visible { display:block; }
-  .loading-main { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--sage); animation:gentlePulse 2.5s ease-in-out infinite; margin-bottom:32px; }
+  .loading-main { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--sage); animation:gentlePulse 2.5s ease-in-out infinite; margin-bottom:28px; }
   .loading-dots { display:inline-block; width:24px; text-align:left; }
   @keyframes gentlePulse { 0%,100%{opacity:.35} 50%{opacity:1} }
-  .loading-prompt { font-family:'Playfair Display',serif; font-size:19px; font-style:italic; color:var(--lichen); max-width:420px; margin:0 auto; line-height:1.75; opacity:0; transition:opacity 1.8s ease; }
+  .loading-prompt { font-family:'Playfair Display',serif; font-size:19px; font-style:italic; color:var(--lichen); max-width:420px; margin:0 auto 28px; line-height:1.75; opacity:0; transition:opacity 1.8s ease; min-height:1.75em; }
   .loading-prompt.visible { opacity:.75; }
-  .loading-wait { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; color:rgba(138,171,92,.45); margin-top:24px; opacity:0; transition:opacity 2s ease; }
+  .loading-wait { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; color:rgba(138,171,92,.45); opacity:0; transition:opacity 2s ease; }
   .loading-wait.visible { opacity:1; }
 
   .error-msg { display:none; font-family:'DM Mono',monospace; font-size:12px; color:var(--rust); margin-top:12px; padding:10px 16px; border:1px solid rgba(196,83,26,.3); border-radius:4px; background:rgba(196,83,26,.06); }
@@ -147,7 +147,7 @@
 <div class="container">
   <header>
     <div class="eyebrow">Field Guide · Habitat Stewardship Trainer</div>
-    <a class="logo-link" onclick="goHome()" href="#">
+    <a class="logo-link" href="javascript:void(0)" onclick="goHome()">
       <h1>Weed<em>Watch</em></h1>
     </a>
     <p class="tagline">Identify the fast-spreading plants crowding out natives in your region. Learn to recognize them, manage them thoughtfully, and give your local wildlife and pollinators room to thrive.</p>
@@ -236,14 +236,13 @@ function stopLoading() {
   document.getElementById('loadingWait').classList.remove('visible');
 }
 
-// Return to landing page — hide results, clear zip, scroll to top
 function goHome() {
+  stopLoading();
   document.getElementById('results').classList.remove('visible');
   document.getElementById('loading').classList.remove('visible');
   document.getElementById('errorMsg').classList.remove('visible');
   document.getElementById('zipInput').value = '';
   document.getElementById('searchBtn').disabled = false;
-  stopLoading();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   setTimeout(() => document.getElementById('zipInput').focus(), 400);
 }
@@ -258,7 +257,7 @@ function getSeason() {
 const seasonEmoji = {spring:'🌱',summer:'☀️',fall:'🍂',winter:'❄️'};
 const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 
-// Sort order: Ideal = 0, Caution = 1, Poor = 2, unknown = 3
+// Robust timing sort — handles any capitalisation or extra words
 function timingOrder(rating) {
   if(!rating) return 3;
   const r = rating.toLowerCase();
@@ -372,7 +371,7 @@ function renderSpecies(data, coords) {
     extEl.style.display = 'none';
   }
 
-  // Sort by timing: Ideal → Caution → Poor
+  // Sort: Ideal → Caution → Poor, stable within each group
   const sorted = [...data.species].sort((a, b) => timingOrder(a.controlTiming) - timingOrder(b.controlTiming));
 
   const grid = document.getElementById('speciesGrid');
@@ -510,11 +509,11 @@ CRITICAL LANGUAGE RULES:
 - The headline must be warm and empowering, focused on what the gardener is making room FOR
 - Good headline examples: "Make room for your Berkshire natives", "Give your Connecticut River Valley wildflowers room to breathe"
 
-SEASONAL CONTROL TIMING:
-For each species assess whether RIGHT NOW (${season} in this specific region) is a good time to act.
+SEASONAL CONTROL TIMING — use exactly these three values, nothing else:
 - "Ideal" = one of the best windows of the year for mechanical or cultural control
 - "Caution" = action is possible but timing is not optimal
 - "Poor" = acting now is ineffective or could make things worse
+The controlTiming field must contain ONLY one of these three words: Ideal, Caution, or Poor.
 
 Return ONLY a raw JSON object (no markdown, no backticks):
 {
@@ -529,7 +528,7 @@ Return ONLY a raw JSON object (no markdown, no backticks):
       "isEdible": true or false,
       "foragingNote": "Only if isEdible: exact harvest window, preparation, safety. Repeated harvesting is itself a control method.",
       "controlTiming": "Ideal" or "Caution" or "Poor",
-      "controlTimingReason": "One clear sentence explaining why — and if poor, when the best window actually is",
+      "controlTimingReason": "One clear sentence explaining why — and if Poor, when the best window actually is",
       "whyItSpreads": "2 sentences on ecological mechanisms",
       "howToIdentify": "2-3 sentences on key visual ID features",
       "seasonalTip": "What this plant looks like RIGHT NOW and the single most useful action a gardener can take today",
@@ -543,7 +542,7 @@ Return ONLY a raw JSON object (no markdown, no backticks):
   ]
 }
 
-Return the 10 most ecologically impactful fast-spreading plants for this region, ordered by ecological impact. Be precise to this location's actual ecology.`;
+Return the 10 most ecologically impactful fast-spreading plants for this region ordered by ecological impact. Be concise — every field should be as brief as possible while remaining useful. Be precise to this location's actual ecology.`;
 
     const resp = await fetch('/api/species', {
       method: 'POST',
