@@ -739,6 +739,36 @@ function renderSpecies(data, coords) {
   document.getElementById('results').classList.add('visible');
 }
 
+// Cache key: zip + month name (e.g. "01002-march")
+// Valid for the whole calendar month — 12 buckets per zip per year
+function getCacheKey(zip) {
+  const month = new Date().toLocaleString('en-US', { month: 'long' }).toLowerCase();
+  return `weedwatch-${zip}-${month}`;
+}
+
+function readCache(zip) {
+  try {
+    const key = getCacheKey(zip);
+    const raw = localStorage.getItem(key);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function writeCache(zip, data) {
+  try {
+    // Also store the month so we can show it was cached
+    const key = getCacheKey(zip);
+    localStorage.setItem(key, JSON.stringify(data));
+    // Clean up old entries for this zip from other months
+    const month = new Date().toLocaleString('en-US', { month: 'long' }).toLowerCase();
+    const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+    months.filter(m => m !== month).forEach(m => {
+      localStorage.removeItem(`weedwatch-${zip}-${m}`);
+    });
+  } catch(e) {}
+}
+
 async function fetchSpecies() {
   const zip = document.getElementById('zipInput').value.trim();
   if(!/^\d{5}$/.test(zip)){
@@ -758,6 +788,16 @@ async function fetchSpecies() {
 
   try {
     const coords = await zipToCoords(zip);
+
+    // Check cache before calling the API
+    const cached = readCache(zip);
+    if(cached) {
+      stopLoading();
+      document.getElementById('loading').classList.remove('visible');
+      document.getElementById('searchBtn').disabled = false;
+      renderSpecies(cached.data, cached.coords);
+      return;
+    }
 
     // Now we know the state — build the regionalized prompt pool
     buildPromptPool(coords.state);
@@ -823,6 +863,9 @@ Return the 10 most ecologically impactful fast-spreading plants for this region 
     const text = aiData.content.map(b => b.text||'').join('');
     const clean = text.replace(/```json|```/g,'').trim();
     const parsed = JSON.parse(clean);
+
+    // Save to cache before rendering
+    writeCache(zip, { data: parsed, coords });
 
     stopLoading();
     document.getElementById('loading').classList.remove('visible');
