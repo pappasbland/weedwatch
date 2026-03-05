@@ -231,17 +231,8 @@ function closeLightbox(e) {
 // Close on Escape key
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLightbox(); });
 
-const allPrompts = [
-  "Step outside if you can. What's the first thing you smell?",
-  "Look up at the nearest tree. Is anything stirring in the branches?",
-  "What was the last bird you heard this morning? Did you see it?",
-  "Notice the light right now. How has it shifted in the past few weeks?",
-  "Find the nearest patch of bare soil. Look closely — what's already moving there?",
-  "Is there standing water anywhere nearby? Snowmelt, puddles, low spots?",
-  "What direction is the wind coming from today?",
-  "Can you hear running water anywhere — a stream, a downspout, a gutter?",
-  "Look at the edges of things — where the lawn meets the woods, where the path meets the field. That's where the action is.",
-  "What's the first thing you'd plant if you had a cleared patch of ground tomorrow?",
+// Universal prompts — timeless, work anywhere
+const universalPrompts = [
   "Every plant you learn today is space you're making for something native.",
   "The soil beneath your feet holds more life than you can imagine.",
   "What native plant would you most love to see return to your land?",
@@ -249,14 +240,202 @@ const allPrompts = [
   "Which patch of your property feels most alive right now, and which feels most depleted?",
   "What's one small thing you could do for your land this weekend?",
   "The plants you're about to learn have been outcompeting natives for decades. Today that starts to change.",
-  "Mud season is underway in many places — roots are accessible, ground is soft. Good timing.",
-  "Early spring is one of the best windows for removal — before leafout, before seeds set. You're here at the right moment.",
   "What would the pollinators on your land thank you for, if they could?",
+  "Look at the edges of things — where the lawn meets the woods, where the path meets the field. That's where the action is.",
+  "What's the first thing you'd plant if you had a cleared patch of ground tomorrow?",
 ];
 
+// Zone-specific prompts keyed by zone + season
+const zonePrompts = {
+  northeast: {
+    spring: [
+      "Mud season is here — roots are loose, ground is soft. One of the best removal windows of the year.",
+      "Look up at the bare branches. Can you spot the corky wings on a Euonymus stem?",
+      "The red-winged blackbirds are back. What else is returning to your land?",
+      "Forsythia is blooming — and so are the first fast-spreading plants. Beat them to it.",
+      "Frost is still possible but the soil is workable. A good week to pull roots.",
+    ],
+    summer: [
+      "Humidity and heat are the fast-spreaders' best friends right now. Which ones are thriving in your yard?",
+      "Look for Japanese knotweed bamboo-like stalks — they can be 8 feet tall by July.",
+      "Can you hear wood thrushes in the understory? Dense shrubs crowd out their habitat.",
+      "The fireflies need open lawn and leaf litter. Is there anything choking that out near you?",
+    ],
+    fall: [
+      "The bright berries you see on shrubs right now are exactly how fast-spreading plants hitch rides with birds.",
+      "Burning bush is turning crimson — beautiful, but every berry is a seed waiting to spread.",
+      "One of the best windows for bittersweet removal — the vines are visible and berries haven't fully dispersed.",
+      "Leaves are falling. What's still green underneath? Often the plants that don't belong.",
+    ],
+    winter: [
+      "Bare branches make identification easier than any other season. Look for structure.",
+      "The corky ridges on winged Euonymus are impossible to miss on a gray winter day.",
+      "Snow on the ground? Good time to map where the problem areas are before spring.",
+      "What birds are visiting your land right now? They're eating — and spreading — seeds.",
+    ],
+  },
+  southeast: {
+    spring: [
+      "Spring in the Southeast comes fast. Fast-spreading plants are already weeks ahead of you.",
+      "Wisteria is blooming purple and beautiful — and strangling trees across the region right now.",
+      "Privet is leafing out earlier than almost everything native. That head start is how it wins.",
+      "Listen for the chuck-will's-widow at dusk. Open woodland is its home — is yours becoming that?",
+    ],
+    summer: [
+      "Kudzu can grow a foot a day in peak summer heat. If you see it, act before fall.",
+      "The heat that feels oppressive to you feels like paradise to most fast-spreading plants.",
+      "Cogongrass thrives in conditions that stress native grasses. Is it showing up along your edges?",
+      "Summer is a tough removal season — but mapping what's where pays off in fall.",
+    ],
+    fall: [
+      "Fall is prime removal time in the Southeast — cooler temps, plants still active enough for herbicide if needed.",
+      "Autumn olive berries are ripening. Each one is a seed that a mockingbird will carry miles.",
+      "Chinese tallow is turning brilliant colors right now. Also spreading aggressively across the Gulf states.",
+      "The light is gentler. Walk your property edges and see what moved in this year.",
+    ],
+    winter: [
+      "Winter doesn't stop growth here the way it does up north. Some fast-spreaders are still active.",
+      "Evergreen privet and Chinese privet hold their leaves all winter — easy to spot when everything else is bare.",
+      "Even in January, there's work to be done in the Southeast. Roots are accessible and the heat is gone.",
+      "What's still green on your land right now? In the Southeast, the answer is often telling.",
+    ],
+  },
+  midwest: {
+    spring: [
+      "The ground is thawing. Garlic mustard is one of the first plants up — and one of the easiest to pull right now.",
+      "Spring ephemerals — trout lily, hepatica, trillium — need open forest floor. What's competing with them?",
+      "Mud season is brief in the Midwest. Use it — roots pull cleanly from saturated soil.",
+      "The wood ducks are back. Healthy wetland edges matter more than ever to them right now.",
+    ],
+    summer: [
+      "Purple loosestrife is at peak bloom — strikingly beautiful, ecologically devastating. Every spike is thousands of seeds.",
+      "Common buckthorn leafs out early and drops leaves late — two extra months of shade over native wildflowers.",
+      "Is the creek bank near you still intact? Fast-spreading plants accelerate erosion on waterways.",
+      "Monarchs need open milkweed patches. What's crowding out the milkweed on your land?",
+    ],
+    fall: [
+      "Buckthorn berries are ripening — birds will spread them all winter. This is the window to act.",
+      "The prairie is putting on its show. What's native out there, and what's borrowed in?",
+      "One hard frost and garlic mustard goes dormant — but it's back first thing in spring. Mark the patches now.",
+      "Fall color in the Midwest is spectacular. Notice which shrubs are still brilliant green — often the non-natives.",
+    ],
+    winter: [
+      "Buckthorn holds its leaves later than anything native. In November it's easy to spot from a distance.",
+      "A cold, clear day is a good day to map your property. Where are the problem areas?",
+      "The sandhill cranes have moved through. What habitat on your land could be better for them next year?",
+      "Snow makes seed dispersal visible — follow the tracks to find where fast-spreaders are moving.",
+    ],
+  },
+  southwest: {
+    spring: [
+      "Desert willow and palo verde are blooming. Buffelgrass is too — and it's fire-ready by summer.",
+      "Spring rains wake everything up at once. Native and non-native alike, racing for the same light.",
+      "Tamarisk is leafing out along the washes. It pulls water from depths native plants can't reach.",
+      "What does your land smell like after rain? That petrichor is native soil biology doing its work.",
+    ],
+    summer: [
+      "Monsoon season is close. Buffelgrass uses those rains to outcompete everything else — and fuels wildfires.",
+      "The heat is extreme for people. For invasive grasses, it's peak growing season.",
+      "Saguaros don't compete well with buffelgrass. If you have them, protecting their base matters.",
+      "Listen for cactus wrens and curve-billed thrashers. Their habitat is the Sonoran scrub you're protecting.",
+    ],
+    fall: [
+      "Cooler mornings — finally. The window for mechanical removal in the desert is opening.",
+      "Tamarisk seed is dispersing now along waterways. One plant can produce half a million seeds.",
+      "Desert tortoise habitat depends on native vegetation. Fast-spreading grasses are changing the game.",
+      "The light in fall in the Southwest is extraordinary. Walk your land in the golden hour.",
+    ],
+    winter: [
+      "Winter in the desert Southwest is mild enough for year-round work. Roots pull well in winter-damp soil.",
+      "Buffelgrass looks brown and dead in winter — but it's not. It's waiting for spring rain.",
+      "Bare desert in winter shows you the structure of things. What's here that shouldn't be?",
+      "Harris's hawks are hunting in cooperative groups now. Open desert scrub is their territory.",
+    ],
+  },
+  pacific: {
+    spring: [
+      "The rain is still coming. English ivy and Himalayan blackberry are using every drop.",
+      "Trillium and camas are blooming in the understory — where they can still find light.",
+      "Himalayan blackberry canes are actively growing right now. Gloves, loppers, and persistence.",
+      "Listen for varied thrushes in the wet forest. They need exactly the kind of understory fast-spreaders destroy.",
+    ],
+    summer: [
+      "The dry season is beginning. Yellow starthistle loves dry disturbed soil — watch the roadsides and edges.",
+      "Scotch broom is blooming bright yellow across hillsides. Each plant produces thousands of seeds that last decades.",
+      "Pacific madrone and Oregon white oak need open competition-free space. What's closing in on them?",
+      "What do the pollinators on your land need most right now? Native blooms or more ivy?",
+    ],
+    fall: [
+      "The rains return — and so does the growth surge for ivy and blackberry. Good time to cut back before they root in.",
+      "Pacific tree frogs are calling again. Healthy pond edges and native vegetation are what they need.",
+      "Himalayan blackberry canes are easier to trace and remove in fall before the worst rain returns.",
+      "The big-leaf maples are turning gold. Notice what's growing underneath them — native or not.",
+    ],
+    winter: [
+      "Rain and mild temps mean fast-spreaders never fully go dormant in the Pacific Northwest.",
+      "English ivy is easy to spot in winter — it's the green mass climbing everything that should be bare.",
+      "Digging ivy in winter soil is oddly satisfying. The roots come out clean and the rain fills the gaps.",
+      "Spotted owls need old-growth structure. Every ivy-free Douglas fir is a small step toward that.",
+    ],
+  },
+  mountain: {
+    spring: [
+      "Snowmelt is the most important event on your land right now. What moves into bare ground first?",
+      "The growing season is short at altitude — so is the window to get ahead of fast-spreading plants.",
+      "Cheatgrass germinates in snow. By the time wildflowers emerge, it already has a head start.",
+      "Listen for sandhill cranes moving through mountain valleys. Wet meadow habitat is critical to them.",
+    ],
+    summer: [
+      "Cheatgrass turns brown and fire-ready by July while native grasses are still green.",
+      "The short alpine summer makes every week count. What's taking up space that native wildflowers need?",
+      "Hummingbirds are working the meadows. Scarlet gilia, penstemon, native columbine — are those still thriving?",
+      "Mountain streams run cold and clear. Riparian fast-spreaders like tamarisk start at lower elevations and move up.",
+    ],
+    fall: [
+      "First frost can come any time now. Many fast-spreaders set seed right up to the freeze.",
+      "The aspens are turning. Cheatgrass understories are a wildfire risk — the connection is direct.",
+      "Elk are moving to lower elevations. The open sagebrush they depend on is worth protecting.",
+      "Fall is brief in the mountains. Mark the problem areas now so you're ready first thing next spring.",
+    ],
+    winter: [
+      "Cheatgrass is dormant but its seeds are everywhere, waiting for snowmelt.",
+      "Snow compresses invasive grass stems — making them visible as a gray mat across hillsides.",
+      "A long look at your land in winter shows you its bones. Where is the structure that needs protecting?",
+      "Mountain bluebirds winter in lower elevations. Healthy native grassland is what brings them back.",
+    ],
+  },
+};
+
+// Map states to climate zones
+function getZone(state) {
+  const zones = {
+    northeast: ['ME','NH','VT','MA','RI','CT','NY','NJ','PA','MD','DE','WV','VA'],
+    southeast: ['NC','SC','GA','FL','AL','MS','TN','KY','AR','LA'],
+    midwest:   ['OH','IN','IL','MI','WI','MN','IA','MO','ND','SD','NE','KS'],
+    southwest: ['TX','OK','NM','AZ','NV','UT','CO'],
+    pacific:   ['CA','OR','WA','AK','HI'],
+    mountain:  ['MT','ID','WY'],
+  };
+  for(const [zone, states] of Object.entries(zones)) {
+    if(states.includes(state)) return zone;
+  }
+  return 'northeast'; // sensible default
+}
+
 let promptPool = [];
+let currentZone = null;
+
+function buildPromptPool(state) {
+  const season = getSeason();
+  const zone = getZone(state);
+  currentZone = zone;
+  const zonal = (zonePrompts[zone] && zonePrompts[zone][season]) ? zonePrompts[zone][season] : [];
+  const combined = [...universalPrompts, ...zonal].sort(() => Math.random() - .5);
+  promptPool = combined;
+}
+
 function getNextPrompt() {
-  if(promptPool.length === 0) promptPool = [...allPrompts].sort(() => Math.random() - .5);
+  if(promptPool.length === 0) promptPool = [...universalPrompts].sort(() => Math.random() - .5);
   return promptPool.pop();
 }
 
@@ -266,6 +445,7 @@ function startLoading() {
     n = (n+1) % 4;
     document.getElementById('dots').textContent = '.'.repeat(n+1);
   }, 500);
+  // Show a universal prompt immediately, zone prompts kick in once coords resolve
   const promptEl = document.getElementById('loadingPrompt');
   promptEl.classList.remove('visible');
   promptEl.textContent = getNextPrompt();
@@ -569,6 +749,9 @@ async function fetchSpecies() {
 
   try {
     const coords = await zipToCoords(zip);
+
+    // Now we know the state — build the regionalized prompt pool
+    buildPromptPool(coords.state);
 
     const prompt = `You are an expert botanist, native plant advocate, and restoration ecologist for the United States.
 
