@@ -37,7 +37,6 @@
   .search-btn:active { transform:translateY(0); }
   .search-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
-  /* Loading */
   .loading { display:none; padding:64px 0; text-align:center; }
   .loading.visible { display:block; }
   .loading-main { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--sage); animation:gentlePulse 2.5s ease-in-out infinite; margin-bottom:32px; }
@@ -61,7 +60,6 @@
   .species-card:hover { border-color:rgba(138,171,92,.3); }
   @keyframes slideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
-  /* Card header */
   .card-header { display:flex; align-items:stretch; cursor:pointer; user-select:none; min-height:88px; }
   .hero-wrap { width:110px; flex-shrink:0; position:relative; overflow:hidden; background:rgba(255,255,255,.03); border-right:1px solid rgba(138,171,92,.1); }
   .hero-img { width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity .5s ease; }
@@ -76,21 +74,16 @@
   .species-common { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--cream); line-height:1.2; }
   .edible-badge { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:10px; background:rgba(76,175,125,.15); color:var(--edible); border:1px solid rgba(76,175,125,.35); white-space:nowrap; flex-shrink:0; }
   .species-latin { font-family:'DM Mono',monospace; font-size:13px; font-style:italic; color:var(--sage); letter-spacing:.05em; margin-bottom:6px; }
-
-  /* Pills row — spread rate + timing side by side */
   .pills-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
   .spread-pill { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:10px; }
   .spread-aggressive { background:rgba(212,56,13,.15); color:#f07050; border:1px solid rgba(212,56,13,.3); }
   .spread-persistent  { background:rgba(232,147,10,.12); color:var(--amber); border:1px solid rgba(232,147,10,.25); }
   .spread-spreading   { background:rgba(138,171,92,.12); color:var(--sage); border:1px solid rgba(138,171,92,.25); }
-
-  /* Timing pills */
   .timing-pill { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:10px; white-space:nowrap; }
-  .timing-ideal   { background:rgba(76,175,125,.15); color:#6dcs9a; border:1px solid rgba(76,175,125,.35); color:#7dd4a8; }
+  .timing-ideal   { background:rgba(76,175,125,.15); color:#7dd4a8; border:1px solid rgba(76,175,125,.35); }
   .timing-caution { background:rgba(232,147,10,.12); color:var(--amber); border:1px solid rgba(232,147,10,.3); }
   .timing-poor    { background:rgba(196,83,26,.1); color:#f07050; border:1px solid rgba(196,83,26,.25); }
 
-  /* Timing reason — shown in card body */
   .timing-block { grid-column:1/-1; display:flex; align-items:flex-start; gap:10px; padding:12px 16px; border-radius:6px; margin-bottom:4px; }
   .timing-block.timing-ideal-block   { background:rgba(76,175,125,.08); border:1px solid rgba(76,175,125,.2); }
   .timing-block.timing-caution-block { background:rgba(232,147,10,.08); border:1px solid rgba(232,147,10,.2); }
@@ -260,6 +253,22 @@ async function zipToCoords(zip) {
   };
 }
 
+// Look up iNaturalist taxa ID by latin name — returns a direct taxa URL or falls back to search
+async function fetchInatTaxaUrl(latinName) {
+  try {
+    const r = await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(latinName)}&per_page=1&rank=species`);
+    const d = await r.json();
+    if(d.results && d.results.length) {
+      const taxon = d.results[0];
+      // Build the clean taxa URL: /taxa/[id]-[Name-With-Hyphens]
+      const slug = taxon.name.replace(/\s+/g, '-');
+      return `https://www.inaturalist.org/taxa/${taxon.id}-${slug}`;
+    }
+  } catch(e) {}
+  // Fallback to search if taxa lookup fails
+  return `https://www.inaturalist.org/observations?taxon_name=${encodeURIComponent(latinName)}`;
+}
+
 async function fetchHeroPhoto(latinName, lat, lon, month) {
   const months = [month, month===1?12:month-1, month===12?1:month+1];
   for(const m of months) {
@@ -291,9 +300,9 @@ function toggleCard(card) { card.classList.toggle('open'); }
 function timingConfig(rating) {
   if(!rating) return null;
   const r = rating.toLowerCase();
-  if(r.includes('ideal')) return { cls:'timing-ideal', pill:'🟢 Ideal Now', blockCls:'timing-ideal-block', icon:'🟢' };
-  if(r.includes('caution')) return { cls:'timing-caution', pill:'🟡 Caution', blockCls:'timing-caution-block', icon:'🟡' };
-  if(r.includes('poor')) return { cls:'timing-poor', pill:'🔴 Poor Timing', blockCls:'timing-poor-block', icon:'🔴' };
+  if(r.includes('ideal'))   return { cls:'timing-ideal',   pill:'🟢 Ideal Now',    blockCls:'timing-ideal-block',   icon:'🟢' };
+  if(r.includes('caution')) return { cls:'timing-caution', pill:'🟡 Caution',      blockCls:'timing-caution-block', icon:'🟡' };
+  if(r.includes('poor'))    return { cls:'timing-poor',    pill:'🔴 Poor Timing',  blockCls:'timing-poor-block',    icon:'🔴' };
   return null;
 }
 
@@ -304,10 +313,11 @@ function renderSpecies(data, coords) {
   document.getElementById('resultsHeadline').textContent = data.headline;
   document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> ${data.seasonalNote}`;
 
+  // Extension link — plain base URL, no search suffix
   const baseUrl = extensionLinks[coords.state];
   const extEl = document.getElementById('extLink');
   if(baseUrl) {
-    extEl.innerHTML = `🌿 <strong>Your local expert resource:</strong> <a href="${baseUrl}/search?q=invasive+plants" target="_blank">${coords.state} Cooperative Extension — plant guidance →</a><br><span style="font-size:10px;opacity:.65;font-style:italic;">Free identification help, control advice, and native plant recommendations specific to your state.</span>`;
+    extEl.innerHTML = `🌿 <strong>Your local expert resource:</strong> <a href="${baseUrl}" target="_blank">${coords.state} Cooperative Extension →</a><br><span style="font-size:10px;opacity:.65;font-style:italic;">Free identification help, control advice, and native plant recommendations specific to your state.</span>`;
   } else {
     extEl.style.display = 'none';
   }
@@ -321,20 +331,14 @@ function renderSpecies(data, coords) {
     card.style.animationDelay = `${i*60}ms`;
 
     const spreadClass = sp.spreadRate==='Aggressive'?'spread-aggressive':sp.spreadRate==='Persistent'?'spread-persistent':'spread-spreading';
-    const inatUrl = `https://www.inaturalist.org/search?q=${encodeURIComponent(sp.latinName)}`;
     const edibleBadge = sp.isEdible ? `<span class="edible-badge">🍽️ Edible</span>` : '';
-
-    // Timing pill for header
     const tc = timingConfig(sp.controlTiming);
     const timingPill = tc ? `<span class="timing-pill ${tc.cls}">${tc.pill}</span>` : '';
-
-    // Timing block for card body
     const timingBlock = (tc && sp.controlTimingReason) ? `
       <div class="timing-block ${tc.blockCls}">
         <span class="timing-block-icon">${tc.icon}</span>
         <span class="timing-block-text">${sp.controlTimingReason}</span>
       </div>` : '';
-
     const edibleBlock = sp.isEdible ? `
       <div class="detail-block block-edible">
         <h4>🍽️ Foraging Notes</h4>
@@ -348,6 +352,7 @@ function renderSpecies(data, coords) {
     }).join('');
 
     const heroId = `hero-${i}`;
+    const inatLinkId = `inat-${i}`;
 
     card.innerHTML = `
       <div class="card-header" onclick="toggleCard(this.parentElement)">
@@ -393,11 +398,12 @@ function renderSpecies(data, coords) {
             ${controlsHtml}
           </div>
         </div>
-        <div class="inat-link">📸 More photos across all seasons: <a href="${inatUrl}" target="_blank">iNaturalist observations →</a></div>
+        <div class="inat-link" id="${inatLinkId}">📸 All observations across every season: <a href="https://www.inaturalist.org/taxa/${encodeURIComponent(sp.latinName)}" target="_blank">loading iNaturalist page...</a></div>
       </div>
     `;
     grid.appendChild(card);
 
+    // Hero photo — non-blocking
     fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month).then(photo => {
       const wrap = document.getElementById(heroId);
       if(!wrap || !photo) return;
@@ -408,6 +414,14 @@ function renderSpecies(data, coords) {
       const img = wrap.querySelector('.hero-img');
       img.onload = () => img.classList.add('loaded');
       img.onerror = () => { wrap.innerHTML = '<div class="hero-placeholder">🌿</div>'; };
+    });
+
+    // iNaturalist taxa URL — non-blocking lookup
+    fetchInatTaxaUrl(sp.latinName).then(taxaUrl => {
+      const linkEl = document.getElementById(inatLinkId);
+      if(linkEl) {
+        linkEl.innerHTML = `📸 All observations across every season: <a href="${taxaUrl}" target="_blank">iNaturalist species page →</a>`;
+      }
     });
   });
 
@@ -448,10 +462,10 @@ CRITICAL LANGUAGE RULES:
 - Good headline examples: "Make room for your Berkshire natives", "Give your Connecticut River Valley wildflowers room to breathe"
 
 SEASONAL CONTROL TIMING:
-For each species, assess whether RIGHT NOW (${season} in this specific region) is a good time for a home gardener to take action.
-- "Ideal" = this is one of the best windows of the year for mechanical or cultural control
-- "Caution" = action is possible but timing is not optimal; explain why
-- "Poor" = acting now is ineffective or could make things worse; explain why and when to act instead
+For each species assess whether RIGHT NOW (${season} in this specific region) is a good time to act.
+- "Ideal" = one of the best windows of the year for mechanical or cultural control
+- "Caution" = action is possible but timing is not optimal
+- "Poor" = acting now is ineffective or could make things worse
 
 Return ONLY a raw JSON object (no markdown, no backticks):
 {
@@ -464,17 +478,17 @@ Return ONLY a raw JSON object (no markdown, no backticks):
       "latinName": "Genus species",
       "spreadRate": "Aggressive" or "Persistent" or "Spreading",
       "isEdible": true or false,
-      "foragingNote": "Only if isEdible: exact harvest window, preparation, safety notes. Repeated harvesting is itself a control method.",
+      "foragingNote": "Only if isEdible: exact harvest window, preparation, safety. Repeated harvesting is itself a control method.",
       "controlTiming": "Ideal" or "Caution" or "Poor",
-      "controlTimingReason": "One clear sentence explaining why now is ideal, requires caution, or is poor timing — and if poor, when the best window actually is",
+      "controlTimingReason": "One clear sentence explaining why — and if poor, when the best window actually is",
       "whyItSpreads": "2 sentences on ecological mechanisms",
       "howToIdentify": "2-3 sentences on key visual ID features",
       "seasonalTip": "What this plant looks like RIGHT NOW and the single most useful action a gardener can take today",
       "whatItDisplaces": "1-2 sentences on native plants, pollinators, or wildlife affected",
       "controls": [
-        { "type": "Mechanical", "description": "Specific technique, timing, root depth, regrowth risk. ALWAYS include disposal: bag for landfill, burn where legal, or dry on pavement. Warn explicitly if any part must NEVER be composted and why. Note seed/berry spread risk." },
+        { "type": "Mechanical", "description": "Specific technique, timing, root depth, regrowth risk. ALWAYS include disposal: bag for landfill, burn where legal, or dry on pavement. Warn explicitly if any part must NEVER be composted and why. Note seed or berry spread risk." },
         { "type": "Cultural", "description": "Native planting, mulching, or ecological approaches that give natives a competitive edge" },
-        { "type": "Chemical", "description": "Last resort only. Specific herbicide, method, timing. Frame as last resort." }
+        { "type": "Chemical", "description": "Last resort only. Specific herbicide, method, timing." }
       ]
     }
   ]
