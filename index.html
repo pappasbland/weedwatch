@@ -140,7 +140,23 @@
   .footer-ext a { color:var(--sage); text-decoration:none; border-bottom:1px solid rgba(138,171,92,.3); transition:color .2s; }
   .footer-ext a:hover { color:var(--cream); }
 
-  .footer-note { margin-top:20px; padding-top:24px; border-top:1px solid rgba(138,171,92,.12); font-family:'DM Mono',monospace; font-size:11px; color:rgba(138,171,92,.4); line-height:1.8; letter-spacing:.03em; }
+  /* Hero expand hint */
+  .hero-expand-hint { position:absolute; bottom:20px; left:0; right:0; text-align:center; font-family:'DM Mono',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,0); transition:color .2s; pointer-events:none; }
+  .species-card.open .hero-wrap:hover .hero-expand-hint { color:rgba(255,255,255,.7); }
+  .species-card.open .hero-img { cursor:zoom-in; }
+
+  /* Lightbox */
+  .lightbox { display:none; position:fixed; inset:0; z-index:1000; background:rgba(10,8,4,.92); align-items:center; justify-content:center; padding:24px; }
+  .lightbox.visible { display:flex; animation:fadeIn .2s ease; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .lightbox-inner { position:relative; max-width:100%; max-height:100%; display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .lightbox-img { max-width:min(860px,90vw); max-height:80vh; object-fit:contain; border-radius:4px; display:block; }
+  .lightbox-caption { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; color:rgba(255,255,255,.5); text-align:center; }
+  .lightbox-caption a { color:rgba(138,171,92,.7); text-decoration:none; border-bottom:1px solid rgba(138,171,92,.3); }
+  .lightbox-caption a:hover { color:var(--sage); }
+  .lightbox-close { position:absolute; top:-16px; right:-16px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--cream); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+  .lightbox-close:hover { background:rgba(255,255,255,.2); }
+  .lightbox-name { font-family:'Playfair Display',serif; font-size:18px; font-style:italic; color:var(--cream); text-align:center; }
 </style>
 </head>
 <body>
@@ -182,8 +198,38 @@
   </div>
 </div>
 
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <div class="lightbox-name" id="lightboxName"></div>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+</div>
+
 <script>
 let dotInterval, waitTimeout;
+
+function openLightbox(largeSrc, obsUrl, observer, name) {
+  document.getElementById('lightboxImg').src = largeSrc;
+  document.getElementById('lightboxImg').alt = name;
+  document.getElementById('lightboxName').textContent = name;
+  document.getElementById('lightboxCaption').innerHTML = `© <a href="${obsUrl}" target="_blank">${observer} on iNaturalist →</a>`;
+  document.getElementById('lightbox').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(e) {
+  // Close if clicking the backdrop or the close button (not the image itself)
+  if(e && e.target.classList.contains('lightbox-img')) return;
+  document.getElementById('lightbox').classList.remove('visible');
+  document.getElementById('lightboxImg').src = '';
+  document.body.style.overflow = '';
+}
+
+// Close on Escape key
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLightbox(); });
 
 const allPrompts = [
   "Step outside if you can. What's the first thing you smell?",
@@ -328,28 +374,47 @@ async function fetchInatTaxaUrl(latinName) {
   return `https://www.inaturalist.org/observations?taxon_name=${encodeURIComponent(latinName)}`;
 }
 
-async function fetchHeroPhoto(latinName, lat, lon, month) {
+// Seasonal diagnostic terms — steer toward the most ID-useful part of the plant right now
+function seasonalPhotoTerm(season) {
+  if(season === 'winter' || season === 'spring') return 'stem bark';
+  if(season === 'summer') return 'leaf flower';
+  if(season === 'fall')   return 'fruit berry';
+  return '';
+}
+
+async function fetchHeroPhoto(latinName, lat, lon, month, season) {
   const months = [month, month===1?12:month-1, month===12?1:month+1];
-  for(const m of months) {
-    try {
-      const url = new URL('https://api.inaturalist.org/v1/observations');
-      url.searchParams.set('taxon_name', latinName);
-      url.searchParams.set('lat', lat);
-      url.searchParams.set('lng', lon);
-      url.searchParams.set('radius', 200);
-      url.searchParams.set('month', m);
-      url.searchParams.set('quality_grade', 'research');
-      url.searchParams.set('photos', true);
-      url.searchParams.set('order_by', 'votes');
-      url.searchParams.set('per_page', 1);
-      const r = await fetch(url);
-      const d = await r.json();
-      if(d.results&&d.results.length&&d.results[0].photos&&d.results[0].photos.length) {
-        const obs = d.results[0];
-        const photo = obs.photos[0];
-        return { src: photo.url.replace('square','medium'), observer: obs.user.login, obsId: obs.id };
-      }
-    } catch(e) {}
+  const term = seasonalPhotoTerm(season);
+  // First pass with diagnostic term, second pass without as fallback
+  const queries = term ? [term, ''] : [''];
+  for(const q of queries) {
+    for(const m of months) {
+      try {
+        const url = new URL('https://api.inaturalist.org/v1/observations');
+        url.searchParams.set('taxon_name', latinName);
+        url.searchParams.set('lat', lat);
+        url.searchParams.set('lng', lon);
+        url.searchParams.set('radius', 200);
+        url.searchParams.set('month', m);
+        url.searchParams.set('quality_grade', 'research');
+        url.searchParams.set('photos', true);
+        url.searchParams.set('order_by', 'votes');
+        url.searchParams.set('per_page', 1);
+        if(q) url.searchParams.set('q', q);
+        const r = await fetch(url);
+        const d = await r.json();
+        if(d.results&&d.results.length&&d.results[0].photos&&d.results[0].photos.length) {
+          const obs = d.results[0];
+          const photo = obs.photos[0];
+          return {
+            src: photo.url.replace('square','medium'),
+            large: photo.url.replace('square','large'),
+            observer: obs.user.login,
+            obsId: obs.id
+          };
+        }
+      } catch(e) {}
+    }
   }
   return null;
 }
@@ -455,16 +520,25 @@ function renderSpecies(data, coords) {
     `;
     grid.appendChild(card);
 
-    fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month).then(photo => {
+    fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month, season).then(photo => {
       const wrap = document.getElementById(heroId);
       if(!wrap || !photo) return;
+      const largeSrc = photo.large;
+      const obsUrl = 'https://www.inaturalist.org/observations/' + photo.obsId;
       wrap.innerHTML = `
-        <img class="hero-img" src="${photo.src}" alt="${sp.commonName}" />
+        <img class="hero-img" src="${photo.src}" alt="${sp.commonName}" data-large="${photo.large}" data-obsurl="https://www.inaturalist.org/observations/${photo.obsId}" data-observer="${photo.observer}" data-name="${sp.commonName}" />
         <div class="hero-credit"><a href="https://www.inaturalist.org/observations/${photo.obsId}" target="_blank">© ${photo.observer}</a></div>
+        <div class="hero-expand-hint">tap to enlarge</div>
       `;
       const img = wrap.querySelector('.hero-img');
       img.onload = () => img.classList.add('loaded');
       img.onerror = () => { wrap.innerHTML = '<div class="hero-placeholder">🌿</div>'; };
+      img.addEventListener('click', (e) => {
+        const parentCard = wrap.closest('.species-card');
+        if(!parentCard || !parentCard.classList.contains('open')) return;
+        e.stopPropagation();
+        openLightbox(img.dataset.large, img.dataset.obsurl, img.dataset.observer, img.dataset.name);
+      });
     });
 
     fetchInatTaxaUrl(sp.latinName).then(taxaUrl => {
