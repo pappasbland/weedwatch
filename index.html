@@ -905,47 +905,13 @@ function renderCuratedCard(sp, index, coords) {
 
   const howToIdentify = sp.ecology.howToIdentify;
 
-  // Control windows — active window full, others collapsed with toggle
-  const windowsHtml = sp.controlWindows.map((w, wi) => {
-    const isHighlighted = w === activeWindow;
+  // Control windows — only show the active/coming-soon window
+  const windowsHtml = (() => {
+    const w = activeWindow;
     const wTc = timingConfig(w.rating);
     const wMethodCls = methodClass(w.method);
     const wMonthNames = w.months.map(m => MONTH_NAMES[m-1].substring(0,3)).join(', ');
-    const collapseId = `window-${index}-${wi}`;
 
-    if(!isHighlighted) {
-      // Collapsed row — title, pills, month range, tap to expand
-      return `
-        <div class="control-window-collapsed" onclick="toggleWindow('${collapseId}')">
-          <div class="collapsed-header">
-            <span class="collapsed-title">${w.title}</span>
-            <span class="timing-pill ${wTc ? wTc.cls : ''}" style="font-size:8px;">${wTc ? wTc.pill : w.rating}</span>
-            <span class="window-method ${wMethodCls}">${w.method}</span>
-            <span class="window-months">${wMonthNames}</span>
-            <span class="collapsed-chevron" id="chev-${collapseId}">›</span>
-          </div>
-          <div class="collapsed-body" id="${collapseId}" style="display:none;">
-            ${w.phenologyCue ? `<div class="window-when" style="margin-top:10px;">
-              <span class="window-when-label">🌿 When &amp; What to Look For</span>
-              ${w.phenologyCue}${w.watchFor ? ' ' + w.watchFor : ''}
-            </div>` : ''}
-            <div class="window-description" style="margin-top:8px;">
-              ${w.description.replace(/\n/g,'<br><br>')}
-              ${w.whyNow ? `<span class="window-why-inline">${w.whyNow}</span>` : ''}
-            </div>
-            <div class="window-disposal">
-              <span class="window-disposal-label">🗑 Disposal</span>
-              ${w.disposal}
-            </div>
-            ${w.doNotDo ? `<div class="window-donotdo">
-              <span class="window-donotdo-label">⚠ Do not</span>
-              ${w.doNotDo}
-            </div>` : ''}
-          </div>
-        </div>`;
-    }
-
-    // Active window — full display
     const block1 = w.phenologyCue
       ? `<div class="window-when">
           <span class="window-when-label">🌿 When &amp; What to Look For</span>
@@ -953,8 +919,12 @@ function renderCuratedCard(sp, index, coords) {
         </div>`
       : '';
 
+    // Split on newlines into separate paragraphs — no gap
+    const descParas = w.description.split(/\n+/).filter(p => p.trim());
+    const descHtml = descParas.map(p => `<p style="margin-bottom:8px;">${p}</p>`).join('');
+
     const block2 = `<div class="window-description">
-      ${w.description.replace(/\n/g,'<br><br>')}
+      ${descHtml}
       ${w.whyNow ? `<span class="window-why-inline">${w.whyNow}</span>` : ''}
     </div>`;
 
@@ -977,7 +947,7 @@ function renderCuratedCard(sp, index, coords) {
           ${w.doNotDo}
         </div>` : ''}
       </div>`;
-  }).join('');
+  })();
 
   // Tools list
   const reqTools = sp.tools.required.map(t => `<li>${t}</li>`).join('');
