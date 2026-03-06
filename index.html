@@ -231,6 +231,26 @@
     color:#f07050; display:block; margin-bottom:3px;
   }
 
+  /* Merged blocks */
+  .window-when {
+    font-size:15px; color:#c8e0a0; line-height:1.7;
+    font-family:'Playfair Display',serif; font-style:italic;
+    padding:10px 14px; margin-bottom:10px;
+    background:rgba(90,122,46,.1);
+    border-left:2px solid var(--fern);
+    border-radius:0 4px 4px 0;
+  }
+  .window-when-label {
+    font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:.15em; text-transform:uppercase;
+    color:var(--sage); display:block; margin-bottom:5px;
+    font-style:normal;
+  }
+  .window-why-inline {
+    display:block; margin-top:8px;
+    font-style:italic; color:var(--lichen); font-size:14px;
+  }
+
   /* Not-in-window notice */
   .no-window-notice {
     padding:16px 20px;
@@ -423,7 +443,7 @@ const SPECIES_DB = [
         months: [4, 5],
         method: 'Mechanical',
         rating: 'Ideal',
-        phenologyCue: 'When trout lilies are blooming on the forest floor, Garlic Mustard is at its most pullable — bolted, identifiable, and not yet seeding. This window is roughly three weeks. Do not wait.',
+        phenologyCue: 'When trout lilies are blooming on the forest floor, Garlic Mustard is at its most pullable — bolted, identifiable, and not yet seeding. This window lasts roughly three weeks. Do not wait.',
         title: 'Pull at bolt stage — before seed set',
         description: 'Grasp the flower stem at the base and pull firmly — the taproot lifts cleanly from spring-moist soil with very little effort. Work systematically across the patch.',
         whyNow: 'The taproot is shallow, the soil is moist, and the plant has not yet invested its energy into seed production. This is your best window — effort here has outsized results.',
@@ -874,7 +894,20 @@ function renderCuratedCard(sp, index, coords) {
     const wTc = timingConfig(w.rating);
     const wMethodCls = methodClass(w.method);
     const wMonthNames = w.months.map(m => MONTH_NAMES[m-1].substring(0,3)).join(', ');
-    const showPhenology = isHighlighted; // phenology cue only on the relevant window
+
+    // Block 1: When & What to Look For — phenology cue + watch for merged
+    const block1 = (isHighlighted && w.phenologyCue)
+      ? `<div class="window-when">
+          <span class="window-when-label">🌿 When &amp; What to Look For</span>
+          ${w.phenologyCue}${w.watchFor ? ' ' + w.watchFor : ''}
+        </div>`
+      : '';
+
+    // Block 2: How to Act — description + why now merged
+    const block2 = `<div class="window-description">
+      ${w.description.replace(/\n/g,'<br><br>')}
+      ${w.whyNow ? `<span class="window-why-inline"> ${w.whyNow}</span>` : ''}
+    </div>`;
 
     return `
       <div class="control-window" style="${!isHighlighted && sp.controlWindows.length > 1 ? 'opacity:0.55' : ''}">
@@ -884,15 +917,8 @@ function renderCuratedCard(sp, index, coords) {
           <span class="window-method ${wMethodCls}">${w.method}</span>
           <span class="window-months">${wMonthNames}</span>
         </div>
-        ${showPhenology && w.phenologyCue ? `
-        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);margin-bottom:6px;">🌿 Phenology Cue</div>
-        <div style="font-family:'Playfair Display',serif;font-size:14px;font-style:italic;color:#c8e0a0;line-height:1.65;margin-bottom:12px;">${w.phenologyCue}</div>` : ''}
-        <div class="window-description">${w.description.replace(/\n/g,'<br><br>')}</div>
-        <div class="window-why-now">⏱ ${w.whyNow}</div>
-        <div class="window-watch">
-          <span class="window-watch-label">👁 Watch for</span>
-          ${w.watchFor}
-        </div>
+        ${block1}
+        ${block2}
         <div class="window-disposal">
           <span class="window-disposal-label">🗑 Disposal</span>
           ${w.disposal}
@@ -982,6 +1008,7 @@ function renderCuratedCard(sp, index, coords) {
 
   // Hero photo
   fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month, season, sp.photoTerms).then(photo => {
+    const wrap = document.getElementById(heroId);
     if(!wrap || !photo) return;
     wrap.innerHTML = `
       <img class="hero-img" src="${photo.src}" alt="${sp.commonName}"
