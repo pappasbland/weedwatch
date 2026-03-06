@@ -40,7 +40,6 @@
   .search-btn:active { transform:translateY(0); }
   .search-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
-  /* Loading — tighter, even spacing between all three elements */
   .loading { display:none; padding:32px 0 40px; text-align:center; }
   .loading.visible { display:block; }
   .loading-main { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--sage); animation:gentlePulse 2.5s ease-in-out infinite; margin-bottom:28px; }
@@ -62,6 +61,8 @@
   .seasonal-note { font-size:16px; color:var(--lichen); font-weight:400; line-height:1.65; padding:16px 20px; border-left:2px solid var(--fern); background:rgba(90,122,46,.08); border-radius:0 4px 4px 0; margin-bottom:40px; }
 
   .species-grid { display:flex; flex-direction:column; gap:4px; }
+
+  /* ── SHARED CARD BASE ───────────────────────────────────────── */
   .species-card { background:rgba(242,237,223,.04); border:1px solid rgba(138,171,92,.12); border-radius:8px; overflow:hidden; transition:border-color .2s; animation:slideIn .4s ease both; }
   .species-card:hover { border-color:rgba(138,171,92,.3); }
   @keyframes slideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
@@ -73,12 +74,16 @@
   .hero-placeholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:28px; opacity:.15; }
   .hero-credit { position:absolute; bottom:0; left:0; right:0; font-family:'DM Mono',monospace; font-size:8px; color:rgba(255,255,255,.5); background:linear-gradient(transparent,rgba(0,0,0,.55)); padding:12px 5px 4px; text-align:center; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .hero-credit a { color:rgba(255,255,255,.6); text-decoration:none; }
+  .hero-expand-hint { position:absolute; bottom:20px; left:0; right:0; text-align:center; font-family:'DM Mono',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,0); transition:color .2s; pointer-events:none; }
+  .species-card.open .hero-wrap:hover .hero-expand-hint { color:rgba(255,255,255,.7); }
+  .species-card.open .hero-img { cursor:zoom-in; }
 
   .rank-badge { font-family:'Playfair Display',serif; font-size:22px; font-weight:900; font-style:italic; color:rgba(138,171,92,.25); width:52px; text-align:center; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
   .card-meta { flex:1; padding:16px 12px 16px 0; display:flex; flex-direction:column; justify-content:center; min-width:0; }
   .name-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
   .species-common { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--cream); line-height:1.2; }
   .edible-badge { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:10px; background:rgba(76,175,125,.15); color:var(--edible); border:1px solid rgba(76,175,125,.35); white-space:nowrap; flex-shrink:0; }
+  .curated-badge { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:10px; background:rgba(138,171,92,.12); color:var(--sage); border:1px solid rgba(138,171,92,.3); white-space:nowrap; flex-shrink:0; }
   .species-latin { font-family:'DM Mono',monospace; font-size:13px; font-style:italic; color:var(--sage); letter-spacing:.05em; margin-bottom:6px; }
   .pills-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
   .spread-pill { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:10px; }
@@ -89,7 +94,33 @@
   .timing-ideal   { background:rgba(76,175,125,.15); color:#7dd4a8; border:1px solid rgba(76,175,125,.35); }
   .timing-caution { background:rgba(232,147,10,.12); color:var(--amber); border:1px solid rgba(232,147,10,.3); }
   .timing-poor    { background:rgba(196,83,26,.1); color:#f07050; border:1px solid rgba(196,83,26,.25); }
+  .expand-col { width:36px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .expand-icon { font-size:18px; color:var(--sage); transition:transform .25s; opacity:.6; }
+  .species-card.open .expand-icon { transform:rotate(45deg); opacity:1; }
 
+  /* ── AI CARD BODY (existing style) ─────────────────────────── */
+  .card-body { display:none; padding:0 20px 24px 20px; border-top:1px solid rgba(138,171,92,.1); }
+  .species-card.open .card-body { display:block; }
+  @media(max-width:580px){ .card-body{ padding-left:12px; } .hero-wrap{ width:80px; } }
+  .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px; }
+  @media(max-width:580px){ .detail-grid{ grid-template-columns:1fr; } }
+  .detail-block h4 { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:8px; }
+  .detail-block p { font-size:16px; color:var(--cream); line-height:1.7; font-weight:400; }
+  .block-season { grid-column:1/-1; background:rgba(90,122,46,.1); border:1px solid rgba(138,171,92,.2); border-radius:6px; padding:16px 20px; }
+  .block-season h4 { color:#a8d88a; }
+  .block-season p  { color:var(--cream); font-size:16px; font-weight:400; }
+  .block-edible { grid-column:1/-1; background:rgba(76,175,125,.08); border:1px solid rgba(76,175,125,.25); border-radius:6px; padding:16px 20px; }
+  .block-edible h4 { color:var(--edible); }
+  .block-edible p  { color:var(--cream); font-size:16px; font-weight:400; }
+  .block-controls { grid-column:1/-1; }
+  .block-controls h4 { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:12px; }
+  .control-row { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
+  .ctrl-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.12em; text-transform:uppercase; padding:3px 8px; border-radius:3px; white-space:nowrap; margin-top:2px; flex-shrink:0; min-width:82px; text-align:center; }
+  .ctrl-mechanical { background:rgba(138,171,92,.15); color:var(--sage); border:1px solid rgba(138,171,92,.3); }
+  .ctrl-cultural   { background:rgba(232,147,10,.1); color:var(--amber); border:1px solid rgba(232,147,10,.25); }
+  .ctrl-chemical   { background:rgba(196,83,26,.1); color:#f07050; border:1px solid rgba(196,83,26,.25); }
+  .ctrl-text { font-size:15px; color:var(--cream); line-height:1.65; font-weight:400; }
+  .ctrl-warning { font-size:11px; color:rgba(240,112,80,.75); font-style:italic; margin-top:4px; }
   .timing-block { grid-column:1/-1; display:flex; align-items:flex-start; gap:10px; padding:12px 16px; border-radius:6px; margin-bottom:4px; }
   .timing-block.timing-ideal-block   { background:rgba(76,175,125,.08); border:1px solid rgba(76,175,125,.2); }
   .timing-block.timing-caution-block { background:rgba(232,147,10,.08); border:1px solid rgba(232,147,10,.2); }
@@ -100,50 +131,142 @@
   .timing-block.timing-caution-block .timing-block-text { color:var(--amber); }
   .timing-block.timing-poor-block    .timing-block-text { color:#f09070; }
 
-  .expand-col { width:36px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .expand-icon { font-size:18px; color:var(--sage); transition:transform .25s; opacity:.6; }
-  .species-card.open .expand-icon { transform:rotate(45deg); opacity:1; }
+  /* ── CURATED CARD BODY ──────────────────────────────────────── */
+  .curated-body { display:none; border-top:1px solid rgba(138,171,92,.15); }
+  .species-card.open .curated-body { display:block; }
 
-  .card-body { display:none; padding:0 20px 24px 20px; border-top:1px solid rgba(138,171,92,.1); }
-  .species-card.open .card-body { display:block; }
-  @media(max-width:580px){ .card-body{ padding-left:12px; } .hero-wrap{ width:80px; } }
+  /* Phenology cue — hero statement at top of expanded card */
+  .phenology-cue {
+    margin:0; padding:18px 20px 16px;
+    background:rgba(90,122,46,.12);
+    border-bottom:1px solid rgba(138,171,92,.15);
+    font-family:'Playfair Display',serif;
+    font-size:16px; font-style:italic;
+    color:#c8e0a0; line-height:1.7;
+  }
+  .phenology-cue-label {
+    display:block; font-family:'DM Mono',monospace;
+    font-size:9px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--sage); margin-bottom:6px; font-style:normal;
+  }
 
-  .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px; }
-  @media(max-width:580px){ .detail-grid{ grid-template-columns:1fr; } }
+  /* Month ID strip — what to look for right now */
+  .month-id-strip {
+    padding:12px 20px;
+    background:rgba(138,171,92,.06);
+    border-bottom:1px solid rgba(138,171,92,.1);
+    display:flex; align-items:flex-start; gap:10px;
+  }
+  .month-id-label {
+    font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:.15em; text-transform:uppercase;
+    color:var(--sage); white-space:nowrap; margin-top:2px; flex-shrink:0;
+  }
+  .month-id-text { font-size:15px; color:var(--cream); line-height:1.6; font-weight:400; }
 
-  .detail-block h4 { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:8px; }
-  .detail-block p { font-size:16px; color:var(--cream); line-height:1.7; font-weight:400; }
+  /* Control window block */
+  .control-window {
+    padding:18px 20px;
+    border-bottom:1px solid rgba(138,171,92,.08);
+  }
+  .control-window:last-of-type { border-bottom:none; }
+  .window-header {
+    display:flex; align-items:center; gap:8px;
+    flex-wrap:wrap; margin-bottom:10px;
+  }
+  .window-title {
+    font-family:'Playfair Display',serif;
+    font-size:15px; font-weight:700; color:var(--cream);
+    flex:1; min-width:0;
+  }
+  .window-method {
+    font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:.1em; text-transform:uppercase;
+    padding:3px 9px; border-radius:10px;
+  }
+  .window-months {
+    font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:.05em; color:var(--lichen);
+  }
+  .window-description { font-size:15px; color:var(--cream); line-height:1.7; font-weight:400; margin-bottom:10px; }
+  .window-why-now {
+    font-size:13px; color:var(--lichen); line-height:1.6;
+    font-style:italic; margin-bottom:10px;
+  }
+  .window-watch {
+    font-size:13px; color:#a8d88a; line-height:1.6;
+    padding:8px 12px;
+    background:rgba(90,122,46,.1);
+    border-left:2px solid var(--fern);
+    border-radius:0 4px 4px 0;
+    margin-bottom:10px;
+  }
+  .window-watch-label {
+    font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:.15em; text-transform:uppercase;
+    color:var(--sage); display:block; margin-bottom:3px;
+  }
+  .window-disposal {
+    font-size:13px; color:rgba(242,237,223,.65);
+    line-height:1.6; margin-bottom:8px;
+    padding:8px 12px;
+    background:rgba(0,0,0,.2);
+    border-radius:4px;
+  }
+  .window-disposal-label {
+    font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:.15em; text-transform:uppercase;
+    color:var(--lichen); display:block; margin-bottom:3px;
+  }
+  .window-donotdo {
+    font-size:13px; color:#f09070; line-height:1.6;
+    padding:8px 12px;
+    background:rgba(196,83,26,.08);
+    border-left:2px solid rgba(196,83,26,.4);
+    border-radius:0 4px 4px 0;
+  }
+  .window-donotdo-label {
+    font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:.15em; text-transform:uppercase;
+    color:#f07050; display:block; margin-bottom:3px;
+  }
 
-  .block-season { grid-column:1/-1; background:rgba(90,122,46,.1); border:1px solid rgba(138,171,92,.2); border-radius:6px; padding:16px 20px; }
-  .block-season h4 { color:#a8d88a; }
-  .block-season p  { color:var(--cream); font-size:16px; font-weight:400; }
+  /* Not-in-window notice */
+  .no-window-notice {
+    padding:16px 20px;
+    background:rgba(232,147,10,.06);
+    border:1px solid rgba(232,147,10,.2);
+    border-radius:6px; margin:16px 20px;
+  }
+  .no-window-notice p { font-size:15px; color:var(--amber); line-height:1.7; }
+  .no-window-notice .next-window-label {
+    font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:.15em; text-transform:uppercase;
+    color:var(--amber); display:block; margin-bottom:6px;
+  }
 
-  .block-edible { grid-column:1/-1; background:rgba(76,175,125,.08); border:1px solid rgba(76,175,125,.25); border-radius:6px; padding:16px 20px; }
-  .block-edible h4 { color:var(--edible); }
-  .block-edible p  { color:var(--cream); font-size:16px; font-weight:400; }
+  /* Curated ecology + tools sections */
+  .curated-sections { padding:0 20px 20px; display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:4px; }
+  @media(max-width:580px){ .curated-sections{ grid-template-columns:1fr; } }
+  .curated-section h4 { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:8px; }
+  .curated-section p, .curated-section li { font-size:15px; color:var(--cream); line-height:1.7; font-weight:400; }
+  .curated-section.full { grid-column:1/-1; }
+  .curated-section ul { list-style:none; padding:0; }
+  .curated-section ul li { padding:3px 0 3px 16px; position:relative; }
+  .curated-section ul li::before { content:'·'; position:absolute; left:0; color:var(--sage); }
+  .curated-foraging { grid-column:1/-1; background:rgba(76,175,125,.08); border:1px solid rgba(76,175,125,.25); border-radius:6px; padding:16px; }
+  .curated-foraging h4 { color:var(--edible); }
+  .tick-note { grid-column:1/-1; background:rgba(196,83,26,.07); border:1px solid rgba(196,83,26,.2); border-radius:6px; padding:16px; }
+  .tick-note h4 { color:#f07050; }
 
-  .block-controls { grid-column:1/-1; }
-  .block-controls h4 { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:12px; }
-  .control-row { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
-  .ctrl-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.12em; text-transform:uppercase; padding:3px 8px; border-radius:3px; white-space:nowrap; margin-top:2px; flex-shrink:0; min-width:82px; text-align:center; }
-  .ctrl-mechanical { background:rgba(138,171,92,.15); color:var(--sage); border:1px solid rgba(138,171,92,.3); }
-  .ctrl-cultural   { background:rgba(232,147,10,.1); color:var(--amber); border:1px solid rgba(232,147,10,.25); }
-  .ctrl-chemical   { background:rgba(196,83,26,.1); color:#f07050; border:1px solid rgba(196,83,26,.25); }
-  .ctrl-text { font-size:15px; color:var(--cream); line-height:1.65; font-weight:400; }
-  .ctrl-warning { font-size:11px; color:rgba(240,112,80,.75); font-style:italic; margin-top:4px; }
-
-  .inat-link { margin-top:16px; font-family:'DM Mono',monospace; font-size:12px; color:rgba(138,171,92,.6); letter-spacing:.05em; }
+  .inat-link { margin:0 20px 20px; font-family:'DM Mono',monospace; font-size:12px; color:rgba(138,171,92,.6); letter-spacing:.05em; }
   .inat-link a { color:var(--sage); text-decoration:none; border-bottom:1px solid rgba(138,171,92,.3); transition:color .2s; }
   .inat-link a:hover { color:var(--cream); }
 
   .footer-ext { margin-top:40px; padding:16px 20px; border:1px solid rgba(138,171,92,.2); border-radius:6px; background:rgba(90,122,46,.06); font-family:'DM Mono',monospace; font-size:13px; color:var(--lichen); letter-spacing:.03em; line-height:1.8; }
   .footer-ext a { color:var(--sage); text-decoration:none; border-bottom:1px solid rgba(138,171,92,.3); transition:color .2s; }
   .footer-ext a:hover { color:var(--cream); }
-
-  /* Hero expand hint */
-  .hero-expand-hint { position:absolute; bottom:20px; left:0; right:0; text-align:center; font-family:'DM Mono',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,0); transition:color .2s; pointer-events:none; }
-  .species-card.open .hero-wrap:hover .hero-expand-hint { color:rgba(255,255,255,.7); }
-  .species-card.open .hero-img { cursor:zoom-in; }
+  .footer-note { margin-top:16px; font-family:'DM Mono',monospace; font-size:10px; color:rgba(184,201,154,.4); letter-spacing:.04em; line-height:1.8; }
 
   /* Lightbox */
   .lightbox { display:none; position:fixed; inset:0; z-index:1000; background:rgba(10,8,4,.92); align-items:center; justify-content:center; padding:24px; }
@@ -157,9 +280,77 @@
   .lightbox-close { position:absolute; top:-16px; right:-16px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--cream); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; }
   .lightbox-close:hover { background:rgba(255,255,255,.2); }
   .lightbox-name { font-family:'Playfair Display',serif; font-size:18px; font-style:italic; color:var(--cream); text-align:center; }
+
+  /* ── DEV PANEL ──────────────────────────────────────────────── */
+  .dev-panel {
+    position:fixed; top:50%; right:0; transform:translateY(-50%);
+    z-index:500; background:rgba(26,18,8,.95);
+    border:1px solid rgba(138,171,92,.3);
+    border-right:none;
+    border-radius:8px 0 0 8px;
+    padding:12px 10px;
+    width:72px;
+    box-shadow:-4px 0 24px rgba(0,0,0,.5);
+  }
+  .dev-panel-label {
+    font-family:'DM Mono',monospace; font-size:8px;
+    letter-spacing:.15em; text-transform:uppercase;
+    color:var(--sage); text-align:center;
+    display:block; margin-bottom:8px;
+    border-bottom:1px solid rgba(138,171,92,.2);
+    padding-bottom:8px;
+  }
+  .month-btns { display:flex; flex-direction:column; gap:3px; }
+  .month-btn {
+    font-family:'DM Mono',monospace; font-size:9px;
+    letter-spacing:.05em; text-transform:uppercase;
+    background:rgba(138,171,92,.08);
+    border:1px solid rgba(138,171,92,.15);
+    color:var(--lichen); border-radius:3px;
+    padding:4px 0; cursor:pointer; text-align:center;
+    transition:background .15s, color .15s, border-color .15s;
+    width:100%;
+  }
+  .month-btn:hover { background:rgba(138,171,92,.18); color:var(--cream); }
+  .month-btn.active {
+    background:var(--fern); color:var(--cream);
+    border-color:var(--sage);
+  }
+  .dev-reset {
+    margin-top:8px; width:100%;
+    font-family:'DM Mono',monospace; font-size:8px;
+    letter-spacing:.05em; text-transform:uppercase;
+    background:rgba(196,83,26,.15);
+    border:1px solid rgba(196,83,26,.3);
+    color:#f07050; border-radius:3px;
+    padding:4px 0; cursor:pointer; text-align:center;
+    transition:background .15s;
+  }
+  .dev-reset:hover { background:rgba(196,83,26,.3); }
 </style>
 </head>
 <body>
+
+<!-- Dev Month Override Panel -->
+<div class="dev-panel" id="devPanel">
+  <span class="dev-panel-label">Month</span>
+  <div class="month-btns">
+    <button class="month-btn" data-month="1"  onclick="setDevMonth(1)">JAN</button>
+    <button class="month-btn" data-month="2"  onclick="setDevMonth(2)">FEB</button>
+    <button class="month-btn" data-month="3"  onclick="setDevMonth(3)">MAR</button>
+    <button class="month-btn" data-month="4"  onclick="setDevMonth(4)">APR</button>
+    <button class="month-btn" data-month="5"  onclick="setDevMonth(5)">MAY</button>
+    <button class="month-btn" data-month="6"  onclick="setDevMonth(6)">JUN</button>
+    <button class="month-btn" data-month="7"  onclick="setDevMonth(7)">JUL</button>
+    <button class="month-btn" data-month="8"  onclick="setDevMonth(8)">AUG</button>
+    <button class="month-btn" data-month="9"  onclick="setDevMonth(9)">SEP</button>
+    <button class="month-btn" data-month="10" onclick="setDevMonth(10)">OCT</button>
+    <button class="month-btn" data-month="11" onclick="setDevMonth(11)">NOV</button>
+    <button class="month-btn" data-month="12" onclick="setDevMonth(12)">DEC</button>
+  </div>
+  <button class="dev-reset" onclick="resetDevMonth()">Today</button>
+</div>
+
 <div class="container">
   <header>
     <div class="eyebrow">Field Guide · Habitat Stewardship Trainer</div>
@@ -193,7 +384,7 @@
     <div class="species-grid" id="speciesGrid"></div>
     <div class="footer-ext" id="extLink"></div>
     <div class="footer-note">
-      Plant information is AI-generated based on regional ecology and current season. Always verify control methods with your local extension service before acting. Photos via iNaturalist (CC BY-NC).
+      Curated species entries are expert-reviewed. Additional species information is AI-generated based on regional ecology and current season. Always verify control methods with your local extension service before acting. Photos via iNaturalist (CC BY-NC).
     </div>
   </div>
 </div>
@@ -209,281 +400,355 @@
 </div>
 
 <script>
-let dotInterval, waitTimeout;
-
-function openLightbox(largeSrc, obsUrl, observer, name) {
-  document.getElementById('lightboxImg').src = largeSrc;
-  document.getElementById('lightboxImg').alt = name;
-  document.getElementById('lightboxName').textContent = name;
-  document.getElementById('lightboxCaption').innerHTML = `© <a href="${obsUrl}" target="_blank">${observer} on iNaturalist →</a>`;
-  document.getElementById('lightbox').classList.add('visible');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeLightbox(e) {
-  // Close if clicking the backdrop or the close button (not the image itself)
-  if(e && e.target.classList.contains('lightbox-img')) return;
-  document.getElementById('lightbox').classList.remove('visible');
-  document.getElementById('lightboxImg').src = '';
-  document.body.style.overflow = '';
-}
-
-// Close on Escape key
-document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLightbox(); });
-
-// Universal prompts — timeless, work anywhere
-const universalPrompts = [
-  "Every plant you learn today is space you're making for something native.",
-  "The soil beneath your feet holds more life than you can imagine.",
-  "What native plant would you most love to see return to your land?",
-  "What did this land look like 200 years ago? What was growing here before?",
-  "Which patch of your property feels most alive right now, and which feels most depleted?",
-  "What's one small thing you could do for your land this weekend?",
-  "The plants you're about to learn have been outcompeting natives for decades. Today that starts to change.",
-  "What would the pollinators on your land thank you for, if they could?",
-  "Look at the edges of things — where the lawn meets the woods, where the path meets the field. That's where the action is.",
-  "What's the first thing you'd plant if you had a cleared patch of ground tomorrow?",
+// ═══════════════════════════════════════════════════════════════
+// HARDCODED SPECIES DATABASE
+// ═══════════════════════════════════════════════════════════════
+const SPECIES_DB = [
+  {
+    id: 'alliaria-petiolata',
+    commonName: 'Garlic Mustard',
+    latinName: 'Alliaria petiolata',
+    zones: ['northeast'],
+    spreadRate: 'Aggressive',
+    isEdible: true,
+    mechanicalFutile: false,
+    callAPro: false,
+    ecology: {
+      whyItSpreads: 'A single plant produces up to 600 seeds that remain viable in soil for five years. It also releases chemicals from its roots that suppress the mycorrhizal fungi native tree seedlings depend on — effectively poisoning the forest floor against its competition.',
+      whatItDisplaces: 'Spring ephemerals — trout lily, trillium, wild ginger, bloodroot — that depend on open forest floor light before canopy closes. Also suppresses native tree seedling regeneration, reshaping forests over decades.',
+      howToIdentify: 'Year one is a low rosette of kidney-shaped scalloped leaves with a strong garlic smell when crushed. Year two it bolts to 2–4 feet with triangular toothed leaves, small white four-petaled flowers, then long thin seed pods.'
+    },
+    controlWindows: [
+      {
+        months: [4, 5],
+        method: 'Mechanical',
+        rating: 'Ideal',
+        phenologyCue: 'When trout lilies are blooming on the forest floor, Garlic Mustard is at its most pullable — bolted, identifiable, and not yet seeding. This window is roughly three weeks. Do not wait.',
+        title: 'Pull at bolt stage — before seed set',
+        description: 'Grasp the stem at the base and pull firmly — the taproot lifts cleanly from spring-moist soil with very little effort. Work systematically across the patch. One person can clear a significant area in an hour.',
+        whyNow: 'The taproot is shallow, the soil is moist, and the plant has not yet invested its energy into seed production. This is the one moment where a small amount of effort produces a large result.',
+        watchFor: 'White flower clusters forming at stem tips — this is your signal that the window is open but closing. The sweet spot is just before or at first bloom.',
+        disposal: 'Bag everything and landfill — do not compost. Seeds can mature on pulled plants left on the ground. If plants have already flowered but seed pods are still green and firm, bag immediately — you are still within the window. If pods have begun to dry and split, you are too late this season — bag anyway to limit further spread but expect regrowth next year. In rural areas where burning is permitted, a hot fire is an effective alternative. Ensure all material is fully incinerated, not left to smolder.',
+        doNotDo: 'Do not pull after seed pods have turned brown and begun to split. At that point pulling scatters seeds and makes things actively worse. Walk away, mark the patch, and return three weeks earlier next spring.'
+      }
+    ],
+    tools: {
+      required: ['Heavy duty lawn bags'],
+      recommended: [
+        'Garden gloves — optional, this plant has no defenses',
+        'Kneeling pad for working along woodland edges',
+        'Bucket for collecting pulled plants before bagging',
+        'Colander or salad spinner if foraging'
+      ],
+      notes: 'One of the most tool-light removals you will do. Bare hands work fine. The main investment is time.'
+    },
+    identification: {
+      byMonth: {
+        '1':  'Year-one rosettes may be visible on mild days — low kidney-shaped scalloped leaves, stays green under snow',
+        '2':  'Rosettes greening up at woodland edges, one of the first plants visible as snow recedes',
+        '3':  'Year-one rosettes clearly visible at woodland edges and disturbed soil — map patches now for April action',
+        '4':  'Year-two plants bolting rapidly — triangular toothed leaves on elongating stems, flower buds forming. This is your window.',
+        '5':  'Peak bloom — small white four-petaled flowers, lower seed pods already forming. Pull now or lose the window.',
+        '6':  'Seed pods elongating and filling — window closing fast. Do not pull once pods begin to dry.',
+        '7':  'Dried brown pods splitting and scattering. Plants collapsed. Year-one rosettes beginning to establish.',
+        '8':  'Year-one rosettes establishing quietly in disturbed soil and woodland edges',
+        '9':  'Rosettes more visible as surrounding vegetation dies back',
+        '10': 'Green rosettes easy to spot after leaf drop — note locations for spring',
+        '11': 'Rosettes persist and stay green — mark patches now so you return at the right moment in April',
+        '12': 'Rosettes visible under light snow — they will be first thing green in spring'
+      }
+    },
+    foragingNote: 'Young bolted stems, leaves and flowers are all edible before seed set — this is your free broccoli rabe substitute. Pull it, eat it, eliminate it in one move. For preparation ideas consult a regional foraging guide. Do not forage near roadsides or anywhere that may have been treated with herbicide.',
+    quiz: {
+      keyFeatures: ['Garlic smell when leaves crushed — definitive','Kidney-shaped scalloped leaves in year-one rosette','Triangular toothed leaves on year-two bolt','Small white four-petaled flowers','Long thin seed pods'],
+      lookAlikesNote: 'Year-one rosettes occasionally confused with native wild ginger or violets. Crush a leaf — the garlic smell is unmistakable and no native Northeast plant shares it.'
+    }
+  },
+  {
+    id: 'euonymus-alatus',
+    commonName: 'Burning Bush',
+    latinName: 'Euonymus alatus',
+    zones: ['northeast'],
+    spreadRate: 'Persistent',
+    isEdible: false,
+    mechanicalFutile: false,
+    callAPro: false,
+    ecology: {
+      whyItSpreads: 'Birds eat the berries enthusiastically in fall and winter, depositing seeds widely across the landscape. A single shrub can produce hundreds of berries annually, each a viable seed.',
+      whatItDisplaces: 'Native shrubs including highbush blueberry, viburnums, and native hollies. Native berries are rich in the fats migrating and overwintering birds depend on — Burning Bush berries do not provide the same nutritional value, meaning birds that eat them are not getting what they need when they need it most.',
+      howToIdentify: 'The corky-winged ridges running along the stems are unmistakable at any season — no native shrub has them. Opposite branching, small oval finely-toothed leaves that show brilliant crimson fall color earlier and more intensely than most natives. Small red-orange berries in fall.'
+    },
+    controlWindows: [
+      {
+        months: [3, 4],
+        method: 'Mechanical',
+        rating: 'Ideal',
+        phenologyCue: 'When forsythia is blooming and the ground has thawed but before leaves emerge, Burning Bush roots are accessible and the shrub is identifiable by its corky-winged stems. This is your best window of the year.',
+        title: 'Dig the root ball before leaf-out',
+        description: 'For shrubs under 4 feet, work a sharp spade or mattock around the root ball perimeter to sever lateral roots, then lever the whole plant out. For larger shrubs, cut the main stems to 6 inches — not as the removal method, but purely to give yourself a handle for root leverage. The goal is always to get the root ball out of the ground.',
+        whyNow: 'Ground is workable, plant is fully identifiable by its corky-winged stems, and no leaves obscure the root zone. The shrub has not yet invested energy in spring growth.',
+        watchFor: 'Forsythia blooming in your area is the signal. The corky-winged stems are easiest to see before leaves emerge — look for their distinctive gray-tan color against bare woodland.',
+        disposal: 'Bag root ball and all stems for landfill. Do not compost. Check the surrounding area for small rooted suckers and remove those too. In rural areas where burning is permitted, woody material burns cleanly and is an effective alternative to landfill.',
+        doNotDo: 'Do not cut to ground level and walk away. Burning Bush resprouts vigorously from the crown and cutting without root removal guarantees a bushier, more vigorous plant next season. Cutting is only useful as a handle for root leverage.'
+      },
+      {
+        months: [9, 10],
+        method: 'Mechanical',
+        rating: 'Ideal',
+        phenologyCue: 'When Burning Bush turns its brilliant crimson — usually the first shrub in the landscape to color up — berries are ripe and birds are watching. This is your last chance before seed dispersal begins in earnest.',
+        title: 'Remove before birds disperse berries',
+        description: 'Dig the root ball as in the spring window. The fall advantage is the plant announces itself brilliantly — you will see every Burning Bush on your property and your neighbors\' in October. The ground may be drier than spring so water the root zone a day before if needed.',
+        whyNow: 'Plant is at peak visibility, berries are ripe but not yet dispersed, ground is still workable before hard frost.',
+        watchFor: 'The crimson color arrives earlier than almost any native shrub — if you see a brilliant red shrub in September or early October at a woodland edge or hedgerow, it is almost certainly Burning Bush.',
+        disposal: 'Bag everything with extra care — every berry is a seed. Double-bag if berries are present. Landfill only. Do not leave pulled plants on the ground even briefly as birds will strip berries from pulled stems within hours. In rural areas where burning is permitted, woody material burns cleanly — ensure all berry-bearing material is fully incinerated.',
+        doNotDo: 'Do not delay once you see the crimson color. Robins, starlings and cedar waxwings can strip a shrub of berries in a single afternoon.'
+      },
+      {
+        months: [6, 7, 8],
+        method: 'Chemical',
+        rating: 'Caution',
+        phenologyCue: 'If you are seeing this in summer and want to act now, chemical treatment is possible — but if you can wait, fall mechanical removal requires no herbicide and the opportunity to do that arrives in September.',
+        title: 'Summer foliar treatment — or wait for fall',
+        description: 'Apply triclopyr or glyphosate to all leaf surfaces on a dry day with no rain forecast for 24 hours. Thoroughly wet all foliage. If you are seeing this in July or August, the fall mechanical window opens in September when the plant turns crimson. Consider marking this shrub now and returning in September.',
+        whyNow: 'Active growth moves herbicide from leaves into the root system. But fall mechanical removal is typically more complete and the opportunity to do that arrives soon — weigh that option before reaching for the sprayer.',
+        watchFor: 'Full canopy development with no fruit yet visible signals chemical timing is right — but also signals that fall mechanical removal is only 6–8 weeks away.',
+        disposal: 'If treating chemically, leave the shrub in place through the season. Remove the dead structure the following spring once you can confirm the root system has died.',
+        doNotDo: 'Do not apply near water. Do not treat on windy days. Do not assume one treatment has fully killed the plant — check for regrowth the following spring.'
+      }
+    ],
+    tools: {
+      required: ['Sharp spade or mattock','Loppers for stem cutting as leverage aid','Heavy duty lawn bags'],
+      recommended: ['Extractigator or Weed Wrench for shrubs under 3 inches stem diameter','Pruning saw for larger woody stems','Wheelbarrow for moving root balls'],
+      notes: 'Tool investment scales with shrub size. A small burning bush under 2 feet needs only a spade and gloves. A mature 6-foot shrub needs a mattock, real leverage, and ideally a second person.'
+    },
+    identification: {
+      byMonth: {
+        '1':  'Bare stems with corky-winged ridges clearly visible — one of the easiest winter ID plants in the Northeast',
+        '2':  'Same as January — look for the tan-gray corky-winged ridges running along stems and opposite branching',
+        '3':  'Buds swelling slightly, corky-winged ridges on stems still the dominant feature. Forsythia bloom signals your removal window is opening.',
+        '4':  'Small bright green leaves emerging — act now if you have not already, window closing as leaves obscure stems',
+        '5':  'Full leaf — oval finely-toothed opposite pairs, rounded shrub shape becoming dense',
+        '6':  'Small inconspicuous yellow-green flowers. Full leaf — chemical window open, but fall mechanical is coming.',
+        '7':  'Dense green foliage, berries forming and still green. Mark shrubs now for fall removal.',
+        '8':  'Berries maturing, foliage still fully green. Fall crimson and your removal window is 4–6 weeks away.',
+        '9':  'First hints of crimson — earliest shrub in the landscape to color. Berries turning red-orange. Act now.',
+        '10': 'Peak crimson — unmissable. Berries ripe, birds active. Remove immediately.',
+        '11': 'Leaves dropping, berries may persist briefly. Corky-winged stems visible again after leaf drop.',
+        '12': 'Bare stems, corky-winged ridges prominent. Map every shrub you can see for spring action.'
+      }
+    },
+    foragingNote: null,
+    quiz: {
+      keyFeatures: ['Corky-winged ridges on stems — present year round (note: some cultivated varieties show less prominent wings — check multiple stems)','Opposite branching','Brilliant crimson fall color — earliest shrub in the landscape to color','Small red-orange berries in fall','Oval finely-toothed opposite leaves'],
+      lookAlikesNote: 'Sometimes confused with native viburnums or Eastern Wahoo from a distance. The corky-winged stems are definitive on most plants — examine several stems. Eastern Wahoo has much fainter ridges and very different bark texture.'
+    }
+  },
+  {
+    id: 'celastrus-orbiculatus',
+    commonName: 'Oriental Bittersweet',
+    latinName: 'Celastrus orbiculatus',
+    zones: ['northeast'],
+    spreadRate: 'Aggressive',
+    isEdible: false,
+    mechanicalFutile: false,
+    callAPro: false,
+    ecology: {
+      whyItSpreads: 'Each vine produces thousands of berries annually, eaten and dispersed by birds across the landscape. Underground runners spread laterally from established plants, sending up new vines yards away from the parent. Once it reaches a tree canopy it spreads horizontally through the crown, and its spiraling stems girdle and kill trees over years.',
+      whatItDisplaces: 'Native American Bittersweet, now rare across much of the Northeast, is directly outcompeted and hybridizes with Oriental Bittersweet. The trees it girdles are often mature natives — oaks, maples, hickories — that took decades to establish.',
+      howToIdentify: 'Round leaves with finely toothed margins. Oriental Bittersweet produces berries along the entire length of the stem — this is the key diagnostic. Native American Bittersweet produces berries only at the stem tips. Yellow-orange capsules split to reveal red berries in fall.'
+    },
+    controlWindows: [
+      {
+        months: [10, 11],
+        method: 'Mechanical',
+        rating: 'Caution',
+        phenologyCue: 'When the yellow-orange berry capsules split open along the vine length and reveal red berries, bittersweet is at its most visible. This is an important window for protecting your trees by severing vines at the base — but understand that berries already present will continue to be dispersed by birds.',
+        title: 'Sever at base to protect trees — note berry dispersal limitations',
+        description: 'Find where each vine enters the ground and sever it at the base with loppers or a pruning saw. This immediately stops further girdling damage to your trees. Do not attempt to pull the vine down from the tree while berries are present — leave it to die in place over winter and remove the dead vine in late winter or early spring. For vines short enough to reach entirely, removal now is worthwhile. For tall established vines, severing at the base is the priority action this season — thorough root removal follows in spring.',
+        whyNow: 'The vine is at maximum visibility — every plant announces itself with yellow-orange and red berries. Severing at the base now protects trees immediately and sets up thorough root removal in spring.',
+        watchFor: 'Yellow-orange capsules splitting to reveal bright red berries along the full length of the vine — not just at the tips. That berry distribution along the whole stem confirms Oriental rather than native American Bittersweet.',
+        disposal: 'Do not bag or move any material with berries still attached — handling spreads seeds. Leave severed above-ground growth in place until winter. Bag root material that you are able to dig now for landfill. In rural areas where burning is permitted, a hot fire destroys seeds and vine material effectively — ensure full incineration.',
+        doNotDo: 'Do not cut vines heavy with berries for decorative use — this is one of the primary ways bittersweet spreads into new areas. Bare vines pulled in late winter are fine for wreath-making once confirmed dead and berry-free. Do not pull vines down from trees when berries are present.'
+      },
+      {
+        months: [3, 4],
+        method: 'Mechanical',
+        rating: 'Ideal',
+        phenologyCue: 'When the ground thaws and before leaf-out, this is your best window for thorough root removal — whether you severed vines last fall or are starting fresh.',
+        title: 'Root removal before leaf-out — best window of the year',
+        description: 'If you severed vines last fall: locate the root crowns at the base of those severed vines, remove the dead above-ground material from trees now that berries are gone, and dig out the full root system. Orange interior root color confirms you have the right plant.\n\nIf you are starting fresh: look for last year\'s dead tan vines still attached to trees and trace them to the ground. New growth pushing up from root crowns will be just emerging — reddish-green shoots are easy to spot and pull before they establish. You may not get every root this first season — a consistent annual effort in this window yields significant results over time.',
+        whyNow: 'Ground is workable, vines are leafless and easy to trace, and new shoots are just emerging making young plants easy to spot before they establish. This is the window where effort has the most lasting impact.',
+        watchFor: 'New reddish-green shoots emerging from root crowns at the base of trees and along woodland edges. Also look for the distinctive orange interior of cut roots — your confirmation you have the right plant.',
+        disposal: 'Bag all root and vine material for landfill. Root fragments left on moist ground can re-root — do not leave piles for later. In rural areas where burning is permitted, a hot fire is an effective alternative to landfill for root and vine material.',
+        doNotDo: 'Do not assume the job is finished in one session. Bittersweet root systems are extensive and lateral runners can be followed for many feet. Mark the area and return throughout spring as new shoots emerge.'
+      },
+      {
+        months: [6, 7, 8],
+        method: 'Chemical',
+        rating: 'Caution',
+        phenologyCue: 'If large established vines are beyond mechanical control, summer foliar or cut-stump treatment is an option. The fall identification window and the spring root removal window are both more effective — use chemical only when mechanical is genuinely not possible.',
+        title: 'Foliar or cut-stump treatment — last resort',
+        description: 'For large vines, apply triclopyr to cut stumps immediately after cutting — within minutes, as the stump seals quickly. Alternatively apply foliar triclopyr or glyphosate to all leaf surfaces on a dry windless day. Cut-stump treatment is preferred near water.',
+        whyNow: 'Active growth translocates herbicide into the root system. Cut-stump treatment is most reliable when the plant is actively growing.',
+        watchFor: 'Full leaf development with berries still green confirms active growth and good herbicide uptake conditions.',
+        disposal: 'Leave treated vines in place. Remove dead material the following spring.',
+        doNotDo: 'Do not apply foliar treatment near water without a licensed applicator. Do not delay cut-stump triclopyr application — it must be applied within minutes of the cut.'
+      }
+    ],
+    tools: {
+      required: ['Loppers for severing vines at base','Clippers or pruners for smaller stems','Pruning saw for thick established vines','Heavy duty lawn bags','Gloves'],
+      recommended: ['Mattock for root crown removal','Flagging tape to mark severed vines in fall for spring root follow-up'],
+      notes: 'The two-stage removal — sever in fall, dig roots in spring — means two separate tool deployments. Flagging tape sounds trivial but makes the spring root work dramatically easier. Mark every crown you sever in October.'
+    },
+    identification: {
+      byMonth: {
+        '1':  'Dead tan vines spiraling up tree trunks — look for girdling damage where vine meets bark. Orange root interior if you dig.',
+        '2':  'Same as January — trace vines to ground level and mark root crowns for spring removal',
+        '3':  'Root crowns visible before leaf-out. First new reddish-green shoots emerging from established roots.',
+        '4':  'New growth pushing — round leaves with finely toothed margins, reddish-green new stems. Trace and pull new shoots now.',
+        '5':  'Actively climbing, leaves fully out, vines extending rapidly into shrubs and tree canopy',
+        '6':  'Small inconspicuous yellow-green flowers. Vines now difficult to distinguish without berry confirmation.',
+        '7':  'Green berries forming along full length of stem — check distribution to confirm Oriental vs native',
+        '8':  'Berries sizing up, still green. Vines at maximum growth, reaching deep into canopies.',
+        '9':  'Capsules beginning to yellow. Start watching daily — the color change happens fast.',
+        '10': 'Yellow-orange capsules splitting to reveal red berries — maximum visibility. Sever at base now to protect trees.',
+        '11': 'Berries persisting, birds actively feeding. Sever any remaining unsevered vines at base.',
+        '12': 'Dead vines clearly visible spiraling up bare trees. Map every vine for spring root work.'
+      }
+    },
+    foragingNote: null,
+    quiz: {
+      keyFeatures: ['Berries along entire stem length — not just at tips','Yellow-orange capsules splitting to reveal red berries','Round finely toothed leaves','Spiraling vine girdling trees and shrubs','Orange interior root color — diagnostic'],
+      lookAlikesNote: 'Native American Bittersweet is now rare but critical to protect — it produces berries ONLY at stem tips, not along the full stem. Before removing any bittersweet, check berry placement. If berries are only at the tips, do not remove — you may have found a native.'
+    }
+  },
+  {
+    id: 'berberis-thunbergii',
+    commonName: 'Japanese Barberry',
+    latinName: 'Berberis thunbergii',
+    zones: ['northeast'],
+    spreadRate: 'Aggressive',
+    isEdible: false,
+    mechanicalFutile: false,
+    callAPro: false,
+    ecology: {
+      whyItSpreads: 'Birds eat the berries and deposit seeds widely. Barberry thrives in deep shade, drought, and compacted soil where native competition struggles. It leafs out earlier than natives in spring and holds its leaves later in fall, gaining several additional weeks of photosynthesis each year.',
+      whatItDisplaces: 'Native shrubs and wildflowers of the forest understory — native viburnums, witch hazel, trillium, wild ginger. Barberry also alters soil chemistry, raising pH and nitrogen levels in ways that suppress native woodland plants.',
+      howToIdentify: 'Dense rounded shrub with extremely sharp single spines at each node — the spines are diagnostic. Small oval leaves, often with a reddish or purple tint in ornamental varieties. Bright red elongated berries in fall that persist through winter. Yellow inner wood and roots are distinctive when cut.'
+    },
+    tickNote: 'Japanese Barberry has a direct and well-documented relationship with blacklegged tick populations. The dense low canopy creates humid microclimates at ground level that ticks need to survive. Studies have found tick densities inside barberry thickets significantly higher than in adjacent native vegetation. Removing barberry from your property is one of the most concrete things you can do to reduce tick pressure.',
+    controlWindows: [
+      {
+        months: [3, 4],
+        method: 'Mechanical',
+        rating: 'Ideal',
+        phenologyCue: 'When the ground has thawed and before barberry leafs out, the shrub is fully visible and the roots are accessible. This is your best window — and your most comfortable one, before the full spine armament is hidden in dense foliage.',
+        title: 'Dig the root ball before leaf-out',
+        description: 'Wear the thickest gloves you own — leather or puncture-resistant — long sleeves and long pants, and eye protection. A mattock or Extractigator tool is significantly more effective than a spade. Work around the full perimeter to sever lateral roots before levering the root ball out. Small plants under 2 feet can sometimes be pulled with a weed wrench.',
+        whyNow: 'Ground is workable, plant is leafless and easier to handle than in full leaf, and root removal is most thorough before spring growth begins.',
+        watchFor: 'Forsythia blooming signals your window is open. Barberry is often one of the first shrubs to show a green haze of emerging leaves — catch it just before that point.',
+        disposal: 'Double-bag all material including berries for landfill — spines will puncture single bags. In rural areas where burning is permitted, a hot fire is an effective alternative and avoids the handling challenges of bagged spiny material. Ensure all material is fully incinerated. Do not burn in a low smolder.',
+        doNotDo: 'Do not attempt removal in shorts, short sleeves, or with thin gloves. The spines cause real injury. Do not leave root fragments — barberry resprouts readily from root pieces left in soil.'
+      },
+      {
+        months: [10, 11],
+        method: 'Mechanical',
+        rating: 'Ideal',
+        phenologyCue: 'When barberry\'s small red berries are bright and persistent after leaf drop, the shrub announces itself clearly in the autumn landscape. Ground is still workable and the shrub is easier to approach than in full summer leaf.',
+        title: 'Fall removal before winter bird dispersal',
+        description: 'Dig the root ball as in the spring window. The fall advantage is that berries make every barberry easy to spot, including ones you missed in spring. Remove before hard frost while ground is still workable. Every shrub removed now is hundreds of seeds not dispersed this winter.',
+        whyNow: 'Bright red berries make every shrub visible. Ground still workable. Removing before winter eliminates this season\'s bird dispersal entirely.',
+        watchFor: 'Bright red elongated berries persisting on bare stems after leaf drop — barberry holds berries long after leaves fall, making it easy to spot from a distance.',
+        disposal: 'Double-bag all material including berries for landfill — spines will puncture single bags. In rural areas where burning is permitted, a hot fire is an effective alternative and avoids the handling challenges of bagged spiny material. Ensure all material is fully incinerated. Do not burn in a low smolder.',
+        doNotDo: 'Do not delay past the first hard frost — ground workability drops quickly. Do not underestimate the spines on dead stems.'
+      },
+      {
+        months: [5, 6, 7, 8, 9],
+        method: 'Chemical',
+        rating: 'Caution',
+        phenologyCue: 'If mechanical removal is not possible due to terrain or density, foliar treatment in active growth is effective. But the spring and fall mechanical windows are safer, require no herbicide, and remove the plant entirely.',
+        title: 'Foliar treatment for large infestations — or wait for a mechanical window',
+        description: 'Apply triclopyr or glyphosate to all leaf surfaces on a dry windless day with no rain forecast for 24 hours. For dense thickets where foliar spray is impractical, cut-stump treatment with triclopyr applied immediately after cutting is effective. Barberry thickets harbor high tick populations — wear permethrin-treated clothing and do a thorough tick check after any work in dense stands.',
+        whyNow: 'Active growth moves herbicide efficiently into the root system. However fall mechanical removal is likely only weeks away if you are seeing this in late summer — weigh that option first.',
+        watchFor: 'Full leaf development confirms active growth and good herbicide uptake conditions.',
+        disposal: 'Leave treated shrubs in place through the season. Remove dead structure the following spring wearing puncture-resistant gloves — dead barberry spines remain dangerous.',
+        doNotDo: 'Do not work in dense barberry thickets without tick protection regardless of season. Do not apply near water.'
+      }
+    ],
+    tools: {
+      required: ['Puncture-resistant or thick leather gloves — non-negotiable','Long sleeves and long pants','Eye protection — safety glasses or goggles','Tick repellent — apply before entering any barberry stand','Mattock or Extractigator','Heavy duty lawn bags — double bag'],
+      recommended: ['Weed Wrench for smaller plants','Pruning saw for large woody crowns','Second person — both for safety and for leverage on large root balls','Permethrin-treated clothing for extended work in dense stands'],
+      notes: 'The Extractigator pays for itself on the first session if you have more than a handful of barberry shrubs. A mattock is the budget alternative available at any garden center. Do not attempt this job in shorts or sandals.'
+    },
+    identification: {
+      byMonth: {
+        '1':  'Dense rounded thorny silhouette with bright red berries persisting on bare stems — easy to spot in winter',
+        '2':  'Berries may still persist. Single sharp spines at each node visible on bare stems.',
+        '3':  'One of the first shrubs to show green — tiny leaves emerging while most natives are still bare. Spring removal window opening.',
+        '4':  'Small oval leaves fully out, often with reddish tint in ornamental varieties. Act now before full leaf makes handling harder.',
+        '5':  'Small yellow flowers — inconspicuous but present. Full leaf, dense canopy forming.',
+        '6':  'Dense green rounded form. Tick habitat at peak. Green berries forming.',
+        '7':  'Full dense canopy. Berries sizing up and still green.',
+        '8':  'Berries beginning to redden. Dense foliage still at maximum.',
+        '9':  'Berries turning bright red, foliage beginning to thin slightly.',
+        '10': 'Bright red berries fully developed, leaves dropping — shrub highly visible. Fall removal window open.',
+        '11': 'Leaves mostly gone, red berries persistent and conspicuous. Remove before ground freezes.',
+        '12': 'Bare spiny stems with red berries — map every shrub for spring action.'
+      }
+    },
+    foragingNote: null,
+    quiz: {
+      keyFeatures: ['Single sharp spine at each node — diagnostic','Bright red elongated berries persisting through winter','Yellow inner wood and roots when cut','Small oval leaves often with reddish or purple tint','Dense rounded low form'],
+      lookAlikesNote: 'Native shrub roses also have thorns but rose thorns are curved and occur along the stem rather than as single spines at nodes. Common Barberry (Berberis vulgaris, also non-native) has three-pronged spines — also remove if found.'
+    }
+  }
 ];
 
-// Zone-specific prompts keyed by zone + season
-const zonePrompts = {
-  northeast: {
-    spring: [
-      "Mud season is here — roots are loose, ground is soft. One of the best removal windows of the year.",
-      "Look up at the bare branches. Can you spot the corky wings on a Euonymus stem?",
-      "The red-winged blackbirds are back. What else is returning to your land?",
-      "Forsythia is blooming — and so are the first fast-spreading plants. Beat them to it.",
-      "Frost is still possible but the soil is workable. A good week to pull roots.",
-    ],
-    summer: [
-      "Humidity and heat are the fast-spreaders' best friends right now. Which ones are thriving in your yard?",
-      "Look for Japanese knotweed bamboo-like stalks — they can be 8 feet tall by July.",
-      "Can you hear wood thrushes in the understory? Dense shrubs crowd out their habitat.",
-      "The fireflies need open lawn and leaf litter. Is there anything choking that out near you?",
-    ],
-    fall: [
-      "The bright berries you see on shrubs right now are exactly how fast-spreading plants hitch rides with birds.",
-      "Burning bush is turning crimson — beautiful, but every berry is a seed waiting to spread.",
-      "One of the best windows for bittersweet removal — the vines are visible and berries haven't fully dispersed.",
-      "Leaves are falling. What's still green underneath? Often the plants that don't belong.",
-    ],
-    winter: [
-      "Bare branches make identification easier than any other season. Look for structure.",
-      "The corky ridges on winged Euonymus are impossible to miss on a gray winter day.",
-      "Snow on the ground? Good time to map where the problem areas are before spring.",
-      "What birds are visiting your land right now? They're eating — and spreading — seeds.",
-    ],
-  },
-  southeast: {
-    spring: [
-      "Spring in the Southeast comes fast. Fast-spreading plants are already weeks ahead of you.",
-      "Wisteria is blooming purple and beautiful — and strangling trees across the region right now.",
-      "Privet is leafing out earlier than almost everything native. That head start is how it wins.",
-      "Listen for the chuck-will's-widow at dusk. Open woodland is its home — is yours becoming that?",
-    ],
-    summer: [
-      "Kudzu can grow a foot a day in peak summer heat. If you see it, act before fall.",
-      "The heat that feels oppressive to you feels like paradise to most fast-spreading plants.",
-      "Cogongrass thrives in conditions that stress native grasses. Is it showing up along your edges?",
-      "Summer is a tough removal season — but mapping what's where pays off in fall.",
-    ],
-    fall: [
-      "Fall is prime removal time in the Southeast — cooler temps, plants still active enough for herbicide if needed.",
-      "Autumn olive berries are ripening. Each one is a seed that a mockingbird will carry miles.",
-      "Chinese tallow is turning brilliant colors right now. Also spreading aggressively across the Gulf states.",
-      "The light is gentler. Walk your property edges and see what moved in this year.",
-    ],
-    winter: [
-      "Winter doesn't stop growth here the way it does up north. Some fast-spreaders are still active.",
-      "Evergreen privet and Chinese privet hold their leaves all winter — easy to spot when everything else is bare.",
-      "Even in January, there's work to be done in the Southeast. Roots are accessible and the heat is gone.",
-      "What's still green on your land right now? In the Southeast, the answer is often telling.",
-    ],
-  },
-  midwest: {
-    spring: [
-      "The ground is thawing. Garlic mustard is one of the first plants up — and one of the easiest to pull right now.",
-      "Spring ephemerals — trout lily, hepatica, trillium — need open forest floor. What's competing with them?",
-      "Mud season is brief in the Midwest. Use it — roots pull cleanly from saturated soil.",
-      "The wood ducks are back. Healthy wetland edges matter more than ever to them right now.",
-    ],
-    summer: [
-      "Purple loosestrife is at peak bloom — strikingly beautiful, ecologically devastating. Every spike is thousands of seeds.",
-      "Common buckthorn leafs out early and drops leaves late — two extra months of shade over native wildflowers.",
-      "Is the creek bank near you still intact? Fast-spreading plants accelerate erosion on waterways.",
-      "Monarchs need open milkweed patches. What's crowding out the milkweed on your land?",
-    ],
-    fall: [
-      "Buckthorn berries are ripening — birds will spread them all winter. This is the window to act.",
-      "The prairie is putting on its show. What's native out there, and what's borrowed in?",
-      "One hard frost and garlic mustard goes dormant — but it's back first thing in spring. Mark the patches now.",
-      "Fall color in the Midwest is spectacular. Notice which shrubs are still brilliant green — often the non-natives.",
-    ],
-    winter: [
-      "Buckthorn holds its leaves later than anything native. In November it's easy to spot from a distance.",
-      "A cold, clear day is a good day to map your property. Where are the problem areas?",
-      "The sandhill cranes have moved through. What habitat on your land could be better for them next year?",
-      "Snow makes seed dispersal visible — follow the tracks to find where fast-spreaders are moving.",
-    ],
-  },
-  southwest: {
-    spring: [
-      "Desert willow and palo verde are blooming. Buffelgrass is too — and it's fire-ready by summer.",
-      "Spring rains wake everything up at once. Native and non-native alike, racing for the same light.",
-      "Tamarisk is leafing out along the washes. It pulls water from depths native plants can't reach.",
-      "What does your land smell like after rain? That petrichor is native soil biology doing its work.",
-    ],
-    summer: [
-      "Monsoon season is close. Buffelgrass uses those rains to outcompete everything else — and fuels wildfires.",
-      "The heat is extreme for people. For invasive grasses, it's peak growing season.",
-      "Saguaros don't compete well with buffelgrass. If you have them, protecting their base matters.",
-      "Listen for cactus wrens and curve-billed thrashers. Their habitat is the Sonoran scrub you're protecting.",
-    ],
-    fall: [
-      "Cooler mornings — finally. The window for mechanical removal in the desert is opening.",
-      "Tamarisk seed is dispersing now along waterways. One plant can produce half a million seeds.",
-      "Desert tortoise habitat depends on native vegetation. Fast-spreading grasses are changing the game.",
-      "The light in fall in the Southwest is extraordinary. Walk your land in the golden hour.",
-    ],
-    winter: [
-      "Winter in the desert Southwest is mild enough for year-round work. Roots pull well in winter-damp soil.",
-      "Buffelgrass looks brown and dead in winter — but it's not. It's waiting for spring rain.",
-      "Bare desert in winter shows you the structure of things. What's here that shouldn't be?",
-      "Harris's hawks are hunting in cooperative groups now. Open desert scrub is their territory.",
-    ],
-  },
-  pacific: {
-    spring: [
-      "The rain is still coming. English ivy and Himalayan blackberry are using every drop.",
-      "Trillium and camas are blooming in the understory — where they can still find light.",
-      "Himalayan blackberry canes are actively growing right now. Gloves, loppers, and persistence.",
-      "Listen for varied thrushes in the wet forest. They need exactly the kind of understory fast-spreaders destroy.",
-    ],
-    summer: [
-      "The dry season is beginning. Yellow starthistle loves dry disturbed soil — watch the roadsides and edges.",
-      "Scotch broom is blooming bright yellow across hillsides. Each plant produces thousands of seeds that last decades.",
-      "Pacific madrone and Oregon white oak need open competition-free space. What's closing in on them?",
-      "What do the pollinators on your land need most right now? Native blooms or more ivy?",
-    ],
-    fall: [
-      "The rains return — and so does the growth surge for ivy and blackberry. Good time to cut back before they root in.",
-      "Pacific tree frogs are calling again. Healthy pond edges and native vegetation are what they need.",
-      "Himalayan blackberry canes are easier to trace and remove in fall before the worst rain returns.",
-      "The big-leaf maples are turning gold. Notice what's growing underneath them — native or not.",
-    ],
-    winter: [
-      "Rain and mild temps mean fast-spreaders never fully go dormant in the Pacific Northwest.",
-      "English ivy is easy to spot in winter — it's the green mass climbing everything that should be bare.",
-      "Digging ivy in winter soil is oddly satisfying. The roots come out clean and the rain fills the gaps.",
-      "Spotted owls need old-growth structure. Every ivy-free Douglas fir is a small step toward that.",
-    ],
-  },
-  mountain: {
-    spring: [
-      "Snowmelt is the most important event on your land right now. What moves into bare ground first?",
-      "The growing season is short at altitude — so is the window to get ahead of fast-spreading plants.",
-      "Cheatgrass germinates in snow. By the time wildflowers emerge, it already has a head start.",
-      "Listen for sandhill cranes moving through mountain valleys. Wet meadow habitat is critical to them.",
-    ],
-    summer: [
-      "Cheatgrass turns brown and fire-ready by July while native grasses are still green.",
-      "The short alpine summer makes every week count. What's taking up space that native wildflowers need?",
-      "Hummingbirds are working the meadows. Scarlet gilia, penstemon, native columbine — are those still thriving?",
-      "Mountain streams run cold and clear. Riparian fast-spreaders like tamarisk start at lower elevations and move up.",
-    ],
-    fall: [
-      "First frost can come any time now. Many fast-spreaders set seed right up to the freeze.",
-      "The aspens are turning. Cheatgrass understories are a wildfire risk — the connection is direct.",
-      "Elk are moving to lower elevations. The open sagebrush they depend on is worth protecting.",
-      "Fall is brief in the mountains. Mark the problem areas now so you're ready first thing next spring.",
-    ],
-    winter: [
-      "Cheatgrass is dormant but its seeds are everywhere, waiting for snowmelt.",
-      "Snow compresses invasive grass stems — making them visible as a gray mat across hillsides.",
-      "A long look at your land in winter shows you its bones. Where is the structure that needs protecting?",
-      "Mountain bluebirds winter in lower elevations. Healthy native grassland is what brings them back.",
-    ],
-  },
-};
+// ═══════════════════════════════════════════════════════════════
+// DEV MONTH OVERRIDE
+// ═══════════════════════════════════════════════════════════════
+let devMonth = null; // null = use real month
 
-// Map states to climate zones
-function getZone(state) {
-  const zones = {
-    northeast: ['ME','NH','VT','MA','RI','CT','NY','NJ','PA','MD','DE','WV','VA'],
-    southeast: ['NC','SC','GA','FL','AL','MS','TN','KY','AR','LA'],
-    midwest:   ['OH','IN','IL','MI','WI','MN','IA','MO','ND','SD','NE','KS'],
-    southwest: ['TX','OK','NM','AZ','NV','UT','CO'],
-    pacific:   ['CA','OR','WA','AK','HI'],
-    mountain:  ['MT','ID','WY'],
-  };
-  for(const [zone, states] of Object.entries(zones)) {
-    if(states.includes(state)) return zone;
+function setDevMonth(m) {
+  devMonth = m;
+  document.querySelectorAll('.month-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.month) === m);
+  });
+  // If results are showing, re-render with new month
+  if(document.getElementById('results').classList.contains('visible')) {
+    const cachedState = window._lastRenderState;
+    if(cachedState) renderSpecies(cachedState.data, cachedState.coords);
   }
-  return 'northeast'; // sensible default
 }
 
-let promptPool = [];
-let currentZone = null;
-
-function buildPromptPool(state) {
-  const season = getSeason();
-  const zone = getZone(state);
-  currentZone = zone;
-  const zonal = (zonePrompts[zone] && zonePrompts[zone][season]) ? zonePrompts[zone][season] : [];
-  const combined = [...universalPrompts, ...zonal].sort(() => Math.random() - .5);
-  promptPool = combined;
+function resetDevMonth() {
+  devMonth = null;
+  document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
+  if(document.getElementById('results').classList.contains('visible')) {
+    const cachedState = window._lastRenderState;
+    if(cachedState) renderSpecies(cachedState.data, cachedState.coords);
+  }
 }
 
-function getNextPrompt() {
-  if(promptPool.length === 0) promptPool = [...universalPrompts].sort(() => Math.random() - .5);
-  return promptPool.pop();
+function getActiveMonth() {
+  return devMonth !== null ? devMonth : new Date().getMonth() + 1;
 }
 
-function startLoading() {
-  let n = 0;
-  dotInterval = setInterval(() => {
-    n = (n+1) % 4;
-    document.getElementById('dots').textContent = '.'.repeat(n+1);
-  }, 500);
-  // Show a universal prompt immediately, zone prompts kick in once coords resolve
-  const promptEl = document.getElementById('loadingPrompt');
-  promptEl.classList.remove('visible');
-  promptEl.textContent = getNextPrompt();
-  setTimeout(() => promptEl.classList.add('visible'), 800);
-  const waitEl = document.getElementById('loadingWait');
-  waitEl.classList.remove('visible');
-  waitTimeout = setTimeout(() => waitEl.classList.add('visible'), 5000);
-}
-
-function stopLoading() {
-  clearInterval(dotInterval);
-  clearTimeout(waitTimeout);
-  document.getElementById('loadingPrompt').classList.remove('visible');
-  document.getElementById('loadingWait').classList.remove('visible');
-}
-
-function goHome() {
-  stopLoading();
-  document.getElementById('results').classList.remove('visible');
-  document.getElementById('loading').classList.remove('visible');
-  document.getElementById('errorMsg').classList.remove('visible');
-  document.getElementById('zipInput').value = '';
-  document.getElementById('searchBtn').disabled = false;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  setTimeout(() => document.getElementById('zipInput').focus(), 400);
-}
-
-function getSeason() {
-  const m = new Date().getMonth();
-  if(m>=2&&m<=4) return 'spring';
-  if(m>=5&&m<=7) return 'summer';
-  if(m>=8&&m<=10) return 'fall';
+function getActiveSeason(month) {
+  const m = month || getActiveMonth();
+  if(m>=3&&m<=5) return 'spring';
+  if(m>=6&&m<=8) return 'summer';
+  if(m>=9&&m<=11) return 'fall';
   return 'winter';
 }
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const seasonEmoji = {spring:'🌱',summer:'☀️',fall:'🍂',winter:'❄️'};
 const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
 
-// Robust timing sort — handles any capitalisation or extra words
 function timingOrder(rating) {
   if(!rating) return 3;
   const r = rating.toLowerCase();
@@ -496,12 +761,392 @@ function timingOrder(rating) {
 function timingConfig(rating) {
   if(!rating) return null;
   const r = rating.toLowerCase();
-  if(r.includes('ideal'))   return { cls:'timing-ideal',   pill:'🟢 Ideal Now',   blockCls:'timing-ideal-block',   icon:'🟢' };
+  if(r.includes('ideal'))   return { cls:'timing-ideal',   pill:'🟢 Ideal Now',   blockCls:'timing-ideal-block',   icon:'🟢', windowCls:'ctrl-mechanical' };
   if(r.includes('caution')) return { cls:'timing-caution', pill:'🟡 Caution',     blockCls:'timing-caution-block', icon:'🟡' };
   if(r.includes('poor'))    return { cls:'timing-poor',    pill:'🔴 Poor Timing', blockCls:'timing-poor-block',    icon:'🔴' };
   return null;
 }
 
+function methodClass(method) {
+  if(!method) return 'ctrl-mechanical';
+  const m = method.toLowerCase();
+  if(m.includes('mechanical')) return 'ctrl-mechanical';
+  if(m.includes('cultural'))   return 'ctrl-cultural';
+  if(m.includes('chemical'))   return 'ctrl-chemical';
+  return 'ctrl-mechanical';
+}
+
+// Find the best control window for the current month
+function getActiveWindow(sp, month) {
+  // Exact month match first
+  const exact = sp.controlWindows.find(w => w.months.includes(month));
+  if(exact) return exact;
+  // Otherwise find the next upcoming window
+  let best = null, bestDist = 99;
+  for(const w of sp.controlWindows) {
+    for(const m of w.months) {
+      const dist = (m - month + 12) % 12;
+      if(dist < bestDist) { bestDist = dist; best = w; }
+    }
+  }
+  return best;
+}
+
+// Find the next ideal window from now
+function getNextIdealWindow(sp, month) {
+  const idealWindows = sp.controlWindows.filter(w => w.rating === 'Ideal');
+  if(!idealWindows.length) return null;
+  let best = null, bestDist = 99;
+  for(const w of idealWindows) {
+    for(const m of w.months) {
+      const dist = (m - month + 12) % 12;
+      if(dist > 0 && dist < bestDist) { bestDist = dist; best = w; }
+    }
+  }
+  return best || idealWindows[0];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CURATED CARD RENDERER
+// ═══════════════════════════════════════════════════════════════
+function renderCuratedCard(sp, index, coords) {
+  const month = getActiveMonth();
+  const season = getActiveSeason(month);
+  const monthName = MONTH_NAMES[month - 1];
+
+  const card = document.createElement('div');
+  card.className = 'species-card';
+  card.style.animationDelay = `${index * 60}ms`;
+
+  const spreadClass = sp.spreadRate==='Aggressive'?'spread-aggressive':sp.spreadRate==='Persistent'?'spread-persistent':'spread-spreading';
+  const activeWindow = getActiveWindow(sp, month);
+  const tc = activeWindow ? timingConfig(activeWindow.rating) : null;
+  const timingPill = tc ? `<span class="timing-pill ${tc.cls}">${tc.pill}</span>` : '';
+  const edibleBadge = sp.isEdible ? `<span class="edible-badge">🍽️ Edible</span>` : '';
+  const heroId = `hero-db-${index}`;
+  const inatLinkId = `inat-db-${index}`;
+
+  // Month ID text
+  const monthIdText = sp.identification.byMonth[String(month)] || '';
+
+  // Determine which windows to show — active window first, others collapsed
+  const windowsHtml = sp.controlWindows.map((w, wi) => {
+    const isActive = w === activeWindow;
+    const wTc = timingConfig(w.rating);
+    const wMethodCls = methodClass(w.method);
+    const wMonthNames = w.months.map(m => MONTH_NAMES[m-1].substring(0,3)).join(', ');
+    const isCurrentMonth = w.months.includes(month);
+
+    return `
+      <div class="control-window" style="${!isActive && sp.controlWindows.length > 1 ? 'opacity:0.6' : ''}">
+        <div class="window-header">
+          <span class="window-title">${w.title}</span>
+          <span class="timing-pill ${wTc ? wTc.cls : ''}">${wTc ? wTc.pill : w.rating}</span>
+          <span class="window-method ${wMethodCls}">${w.method}</span>
+          <span class="window-months">${wMonthNames}</span>
+        </div>
+        ${isActive || isCurrentMonth ? `<div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);margin-bottom:8px;">🌿 Phenology Cue</div>
+        <div style="font-family:'Playfair Display',serif;font-size:14px;font-style:italic;color:#c8e0a0;line-height:1.65;margin-bottom:12px;">${w.phenologyCue}</div>` : ''}
+        <div class="window-description">${w.description.replace(/\n/g,'<br><br>')}</div>
+        <div class="window-why-now">⏱ ${w.whyNow}</div>
+        <div class="window-watch">
+          <span class="window-watch-label">👁 Watch for</span>
+          ${w.watchFor}
+        </div>
+        <div class="window-disposal">
+          <span class="window-disposal-label">🗑 Disposal</span>
+          ${w.disposal}
+        </div>
+        ${w.doNotDo ? `<div class="window-donotdo">
+          <span class="window-donotdo-label">⚠ Do not</span>
+          ${w.doNotDo}
+        </div>` : ''}
+      </div>`;
+  }).join('');
+
+  // Tools list
+  const reqTools = sp.tools.required.map(t => `<li>${t}</li>`).join('');
+  const recTools = sp.tools.recommended.map(t => `<li>${t}</li>`).join('');
+
+  card.innerHTML = `
+    <div class="card-header" onclick="toggleCard(this.parentElement)">
+      <div class="hero-wrap" id="${heroId}">
+        <div class="hero-placeholder">🌿</div>
+      </div>
+      <div class="rank-badge">${index + 1}</div>
+      <div class="card-meta">
+        <div class="name-row">
+          <span class="species-common">${sp.commonName}</span>
+          ${edibleBadge}
+          <span class="curated-badge">✓ Curated</span>
+        </div>
+        <div class="species-latin">${sp.latinName}</div>
+        <div class="pills-row">
+          <span class="spread-pill ${spreadClass}">${sp.spreadRate}</span>
+          ${timingPill}
+        </div>
+      </div>
+      <div class="expand-col"><span class="expand-icon">+</span></div>
+    </div>
+
+    <div class="curated-body">
+
+      ${monthIdText ? `
+      <div class="month-id-strip">
+        <span class="month-id-label">${monthName}</span>
+        <span class="month-id-text">${monthIdText}</span>
+      </div>` : ''}
+
+      ${activeWindow && activeWindow.phenologyCue ? `
+      <div class="phenology-cue">
+        <span class="phenology-cue-label">🌿 Phenology cue</span>
+        ${activeWindow.phenologyCue}
+      </div>` : ''}
+
+      <div style="padding:12px 20px 0;">
+        <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Control Windows</div>
+      </div>
+      ${windowsHtml}
+
+      <div class="curated-sections">
+        <div class="curated-section">
+          <h4>Why It Spreads</h4>
+          <p>${sp.ecology.whyItSpreads}</p>
+        </div>
+        <div class="curated-section">
+          <h4>What It Displaces</h4>
+          <p>${sp.ecology.whatItDisplaces}</p>
+        </div>
+        <div class="curated-section full">
+          <h4>How to Identify</h4>
+          <p>${sp.ecology.howToIdentify}</p>
+        </div>
+        ${sp.tickNote ? `
+        <div class="curated-section tick-note">
+          <h4>🦟 Tick Note</h4>
+          <p>${sp.tickNote}</p>
+        </div>` : ''}
+        ${sp.foragingNote ? `
+        <div class="curated-section curated-foraging">
+          <h4>🍽️ Foraging</h4>
+          <p>${sp.foragingNote}</p>
+        </div>` : ''}
+        <div class="curated-section full">
+          <h4>Tools</h4>
+          <ul>${reqTools}</ul>
+          ${sp.tools.recommended.length ? `<div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--lichen);margin:8px 0 4px;">Also useful</div><ul>${recTools}</ul>` : ''}
+          ${sp.tools.notes ? `<p style="margin-top:8px;font-style:italic;color:var(--lichen);font-size:14px;">${sp.tools.notes}</p>` : ''}
+        </div>
+        <div class="curated-section full">
+          <h4>Key ID Features</h4>
+          <ul>${sp.quiz.keyFeatures.map(f=>`<li>${f}</li>`).join('')}</ul>
+          <p style="margin-top:8px;font-style:italic;color:var(--lichen);font-size:14px;">${sp.quiz.lookAlikesNote}</p>
+        </div>
+      </div>
+
+      <div class="inat-link" id="${inatLinkId}">📸 Photos across every season: <a href="#" style="opacity:.4">loading...</a></div>
+    </div>
+  `;
+
+  // Hero photo
+  fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month, season).then(photo => {
+    const wrap = document.getElementById(heroId);
+    if(!wrap || !photo) return;
+    wrap.innerHTML = `
+      <img class="hero-img" src="${photo.src}" alt="${sp.commonName}"
+        data-large="${photo.large}"
+        data-obsurl="https://www.inaturalist.org/observations/${photo.obsId}"
+        data-observer="${photo.observer}"
+        data-name="${sp.commonName}" />
+      <div class="hero-credit"><a href="https://www.inaturalist.org/observations/${photo.obsId}" target="_blank">© ${photo.observer}</a></div>
+      <div class="hero-expand-hint">tap to enlarge</div>
+    `;
+    const img = wrap.querySelector('.hero-img');
+    img.onload = () => img.classList.add('loaded');
+    img.onerror = () => { wrap.innerHTML = '<div class="hero-placeholder">🌿</div>'; };
+    img.addEventListener('click', (e) => {
+      const parentCard = wrap.closest('.species-card');
+      if(!parentCard || !parentCard.classList.contains('open')) return;
+      e.stopPropagation();
+      openLightbox(img.dataset.large, img.dataset.obsurl, img.dataset.observer, img.dataset.name);
+    });
+  });
+
+  fetchInatTaxaUrl(sp.latinName).then(taxaUrl => {
+    const linkEl = document.getElementById(inatLinkId);
+    if(linkEl) linkEl.innerHTML = `📸 Photos across every season: <a href="${taxaUrl}" target="_blank">iNaturalist species page →</a>`;
+  });
+
+  return card;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOADING + PROMPTS (unchanged from original)
+// ═══════════════════════════════════════════════════════════════
+let dotInterval, waitTimeout;
+
+const universalPrompts = [
+  "Every plant you learn today is space you're making for something native.",
+  "The soil beneath your feet holds more life than you can imagine.",
+  "What native plant would you most love to see return to your land?",
+  "What did this land look like 200 years ago? What was growing here before?",
+  "Which patch of your property feels most alive right now, and which feels most depleted?",
+  "What's one small thing you could do for your land this weekend?",
+  "The plants you're about to learn have been outcompeting natives for decades. Today that starts to change.",
+  "What would the pollinators on your land thank you for, if they could?",
+  "A single native tree can support hundreds of species of insects. What's crowding out yours?",
+  "What does your land sound like at dawn? What birds are missing that used to be there?",
+];
+
+const zonePrompts = {
+  northeast: {
+    spring: ["Mud season is brief. Use it — roots pull cleanly from saturated soil.","Red-winged blackbirds are back. What habitat on your land are they returning to?","Forsythia is blooming. In the Northeast, that's the signal to start watching for what else is waking up.","Garlic mustard is bolting in the woodland edges. This is its most pullable moment.","The ground is soft and the light is low. A good morning for walking your woodland edges."],
+    summer: ["Japanese knotweed is at full height now — hollow stems, heart-shaped leaves. Have you spotted it?","The hummingbirds are working the garden. What native blooms are you giving them?","Burning bush is easy to miss in summer — dense green, nothing special. Mark it now for fall.","Humid and green. The fast-spreaders are at maximum growth. So is your ability to identify them.","What does your yard edge look like right now? That transition zone is where the action is."],
+    fall: ["Burning bush turns crimson before almost anything else. That brilliant red is a signal, not a feature.","Bittersweet berries are splitting open — yellow-orange capsules, red fruit. Beautiful and urgent.","The barberry is showing red berries now, easy to spot. Fall is a good removal window.","Leaves are dropping. Woodland edges are becoming visible again. What do you see?","First frost is coming. Many fast-spreaders set seed right up to the freeze."],
+    winter: ["Corky-winged stems on burning bush are unmistakable in winter — look for them at woodland edges.","Bare stems tell a story. Bittersweet vines spiraling up a tree trunk are easier to trace now than ever.","A cold clear day is a good day to map your property. Where are the problem areas?","The titmice are working the shrubs. Notice which ones they're in — often the berry-laden non-natives.","Snow makes things visible. Follow the bird tracks to find where berries are being eaten and dropped."],
+  },
+  southeast:{spring:[],summer:[],fall:[],winter:[]},
+  midwest:{spring:[],summer:[],fall:[],winter:[]},
+  southwest:{spring:[],summer:[],fall:[],winter:[]},
+  pacific:{spring:[],summer:[],fall:[],winter:[]},
+  mountain:{spring:[],summer:[],fall:[],winter:[]},
+};
+
+function getZone(state) {
+  const zones = {
+    northeast:['ME','NH','VT','MA','RI','CT','NY','NJ','PA','MD','DE','WV','VA'],
+    southeast:['NC','SC','GA','FL','AL','MS','TN','KY','AR','LA'],
+    midwest:['OH','IN','IL','MI','WI','MN','IA','MO','ND','SD','NE','KS'],
+    southwest:['TX','OK','NM','AZ','NV','UT','CO'],
+    pacific:['CA','OR','WA','AK','HI'],
+    mountain:['MT','ID','WY'],
+  };
+  for(const [zone,states] of Object.entries(zones)) {
+    if(states.includes(state)) return zone;
+  }
+  return 'northeast';
+}
+
+let promptPool = [];
+function buildPromptPool(state) {
+  const season = getActiveSeason();
+  const zone = getZone(state);
+  const zonal = (zonePrompts[zone]&&zonePrompts[zone][season])||[];
+  promptPool = [...universalPrompts,...zonal].sort(()=>Math.random()-.5);
+}
+function getNextPrompt() {
+  if(!promptPool.length) promptPool=[...universalPrompts].sort(()=>Math.random()-.5);
+  return promptPool.pop();
+}
+
+function startLoading() {
+  let n=0;
+  dotInterval=setInterval(()=>{n=(n+1)%4;document.getElementById('dots').textContent='.'.repeat(n+1);},500);
+  const promptEl=document.getElementById('loadingPrompt');
+  promptEl.classList.remove('visible');
+  promptEl.textContent=getNextPrompt();
+  setTimeout(()=>promptEl.classList.add('visible'),800);
+  const waitEl=document.getElementById('loadingWait');
+  waitEl.classList.remove('visible');
+  waitTimeout=setTimeout(()=>waitEl.classList.add('visible'),5000);
+}
+function stopLoading() {
+  clearInterval(dotInterval); clearTimeout(waitTimeout);
+  document.getElementById('loadingPrompt').classList.remove('visible');
+  document.getElementById('loadingWait').classList.remove('visible');
+}
+
+function goHome() {
+  stopLoading();
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('loading').classList.remove('visible');
+  document.getElementById('errorMsg').classList.remove('visible');
+  document.getElementById('zipInput').value='';
+  document.getElementById('searchBtn').disabled=false;
+  window.scrollTo({top:0,behavior:'smooth'});
+  setTimeout(()=>document.getElementById('zipInput').focus(),400);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LIGHTBOX
+// ═══════════════════════════════════════════════════════════════
+function openLightbox(largeSrc, obsUrl, observer, name) {
+  document.getElementById('lightboxImg').src=largeSrc;
+  document.getElementById('lightboxImg').alt=name;
+  document.getElementById('lightboxName').textContent=name;
+  document.getElementById('lightboxCaption').innerHTML=`© <a href="${obsUrl}" target="_blank">${observer} on iNaturalist →</a>`;
+  document.getElementById('lightbox').classList.add('visible');
+  document.body.style.overflow='hidden';
+}
+function closeLightbox(e) {
+  if(e&&e.target.classList.contains('lightbox-img')) return;
+  document.getElementById('lightbox').classList.remove('visible');
+  document.getElementById('lightboxImg').src='';
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+
+// ═══════════════════════════════════════════════════════════════
+// iNATURALIST
+// ═══════════════════════════════════════════════════════════════
+async function fetchInatTaxaUrl(latinName) {
+  try {
+    const r=await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(latinName)}&per_page=1&rank=species`);
+    const d=await r.json();
+    if(d.results&&d.results.length){
+      const t=d.results[0];
+      return `https://www.inaturalist.org/taxa/${t.id}-${t.name.replace(/\s+/g,'-')}`;
+    }
+  }catch(e){}
+  return `https://www.inaturalist.org/observations?taxon_name=${encodeURIComponent(latinName)}`;
+}
+
+function seasonalPhotoTerm(season) {
+  if(season==='winter'||season==='spring') return 'stem bark';
+  if(season==='summer') return 'leaf flower';
+  if(season==='fall')   return 'fruit berry';
+  return '';
+}
+
+async function fetchHeroPhoto(latinName, lat, lon, month, season) {
+  const months=[month,month===1?12:month-1,month===12?1:month+1];
+  const term=seasonalPhotoTerm(season);
+  const queries=term?[term,'']:[''];
+  for(const q of queries){
+    for(const m of months){
+      try{
+        const url=new URL('https://api.inaturalist.org/v1/observations');
+        url.searchParams.set('taxon_name',latinName);
+        url.searchParams.set('lat',lat);
+        url.searchParams.set('lng',lon);
+        url.searchParams.set('radius',200);
+        url.searchParams.set('month',m);
+        url.searchParams.set('quality_grade','research');
+        url.searchParams.set('photos',true);
+        url.searchParams.set('order_by','votes');
+        url.searchParams.set('per_page',1);
+        if(q) url.searchParams.set('q',q);
+        const r=await fetch(url);
+        const d=await r.json();
+        if(d.results&&d.results.length&&d.results[0].photos&&d.results[0].photos.length){
+          const obs=d.results[0];
+          const photo=obs.photos[0];
+          return{src:photo.url.replace('square','medium'),large:photo.url.replace('square','large'),observer:obs.user.login,obsId:obs.id};
+        }
+      }catch(e){}
+    }
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOGGLE
+// ═══════════════════════════════════════════════════════════════
+function toggleCard(card) { card.classList.toggle('open'); }
+
+// ═══════════════════════════════════════════════════════════════
+// EXTENSION LINKS
+// ═══════════════════════════════════════════════════════════════
 const extensionLinks = {
   AL:'https://www.aces.edu',AK:'https://www.uaf.edu/ces',AZ:'https://extension.arizona.edu',
   AR:'https://www.uaex.uada.edu',CA:'https://ucanr.edu',CO:'https://extension.colostate.edu',
@@ -529,81 +1174,45 @@ const extensionLinks = {
   WY:'https://www.uwyo.edu/uwext'
 };
 
+// ═══════════════════════════════════════════════════════════════
+// CACHE
+// ═══════════════════════════════════════════════════════════════
+function getCacheKey(zip) {
+  const month=new Date().toLocaleString('en-US',{month:'long'}).toLowerCase();
+  return `weedwatch-${zip}-${month}`;
+}
+function readCache(zip) {
+  try{ const r=localStorage.getItem(getCacheKey(zip)); return r?JSON.parse(r):null; }catch(e){return null;}
+}
+function writeCache(zip,data) {
+  try{
+    localStorage.setItem(getCacheKey(zip),JSON.stringify(data));
+    const month=new Date().toLocaleString('en-US',{month:'long'}).toLowerCase();
+    ['january','february','march','april','may','june','july','august','september','october','november','december']
+      .filter(m=>m!==month).forEach(m=>localStorage.removeItem(`weedwatch-${zip}-${m}`));
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ZIP LOOKUP
+// ═══════════════════════════════════════════════════════════════
 async function zipToCoords(zip) {
-  const r = await fetch(`https://api.zippopotam.us/us/${zip}`);
+  const r=await fetch(`https://api.zippopotam.us/us/${zip}`);
   if(!r.ok) throw new Error('zip_not_found');
-  const d = await r.json();
-  return {
-    lat: parseFloat(d.places[0].latitude),
-    lon: parseFloat(d.places[0].longitude),
-    city: d.places[0]['place name'],
-    state: d.places[0]['state abbreviation']
-  };
+  const d=await r.json();
+  return{lat:parseFloat(d.places[0].latitude),lon:parseFloat(d.places[0].longitude),city:d.places[0]['place name'],state:d.places[0]['state abbreviation']};
 }
 
-async function fetchInatTaxaUrl(latinName) {
-  try {
-    const r = await fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(latinName)}&per_page=1&rank=species`);
-    const d = await r.json();
-    if(d.results && d.results.length) {
-      const taxon = d.results[0];
-      const slug = taxon.name.replace(/\s+/g, '-');
-      return `https://www.inaturalist.org/taxa/${taxon.id}-${slug}`;
-    }
-  } catch(e) {}
-  return `https://www.inaturalist.org/observations?taxon_name=${encodeURIComponent(latinName)}`;
-}
-
-// Seasonal diagnostic terms — steer toward the most ID-useful part of the plant right now
-function seasonalPhotoTerm(season) {
-  if(season === 'winter' || season === 'spring') return 'stem bark';
-  if(season === 'summer') return 'leaf flower';
-  if(season === 'fall')   return 'fruit berry';
-  return '';
-}
-
-async function fetchHeroPhoto(latinName, lat, lon, month, season) {
-  const months = [month, month===1?12:month-1, month===12?1:month+1];
-  const term = seasonalPhotoTerm(season);
-  // First pass with diagnostic term, second pass without as fallback
-  const queries = term ? [term, ''] : [''];
-  for(const q of queries) {
-    for(const m of months) {
-      try {
-        const url = new URL('https://api.inaturalist.org/v1/observations');
-        url.searchParams.set('taxon_name', latinName);
-        url.searchParams.set('lat', lat);
-        url.searchParams.set('lng', lon);
-        url.searchParams.set('radius', 200);
-        url.searchParams.set('month', m);
-        url.searchParams.set('quality_grade', 'research');
-        url.searchParams.set('photos', true);
-        url.searchParams.set('order_by', 'votes');
-        url.searchParams.set('per_page', 1);
-        if(q) url.searchParams.set('q', q);
-        const r = await fetch(url);
-        const d = await r.json();
-        if(d.results&&d.results.length&&d.results[0].photos&&d.results[0].photos.length) {
-          const obs = d.results[0];
-          const photo = obs.photos[0];
-          return {
-            src: photo.url.replace('square','medium'),
-            large: photo.url.replace('square','large'),
-            observer: obs.user.login,
-            obsId: obs.id
-          };
-        }
-      } catch(e) {}
-    }
-  }
-  return null;
-}
-
-function toggleCard(card) { card.classList.toggle('open'); }
-
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
 function renderSpecies(data, coords) {
-  const season = getSeason();
-  const month = new Date().getMonth()+1;
+  // Cache render state so dev month override can re-render
+  window._lastRenderState = { data, coords };
+
+  const month = getActiveMonth();
+  const season = getActiveSeason(month);
+
   document.getElementById('regionTitle').textContent = data.region;
   document.getElementById('resultsHeadline').textContent = data.headline;
   document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> ${data.seasonalNote}`;
@@ -613,59 +1222,69 @@ function renderSpecies(data, coords) {
   if(baseUrl) {
     extEl.innerHTML = `🌿 <strong>Your local expert resource:</strong> <a href="${baseUrl}" target="_blank">${coords.state} Cooperative Extension →</a><br><span style="font-size:10px;opacity:.65;font-style:italic;">Free identification help, control advice, and native plant recommendations specific to your state.</span>`;
   } else {
-    extEl.style.display = 'none';
+    extEl.style.display='none';
   }
 
-  // Sort: Ideal → Caution → Poor, stable within each group
-  const sorted = [...data.species].sort((a, b) => timingOrder(a.controlTiming) - timingOrder(b.controlTiming));
+  // Build set of latin names in our DB for this zone
+  const zone = getZone(coords.state);
+  const dbSpecies = SPECIES_DB.filter(sp => sp.zones.includes(zone));
+  const dbLatinNames = new Set(dbSpecies.map(sp => sp.latinName.toLowerCase()));
 
-  // Deduplicate by latin name — safety net in case Claude repeats a species
+  // Filter Claude results — remove any that are in our DB (no duplicates)
+  const aiSpecies = (data.species||[]).filter(sp => !dbLatinNames.has(sp.latinName.toLowerCase()));
+
+  // Sort AI species by timing
+  const sorted = [...aiSpecies].sort((a,b) => timingOrder(a.controlTiming)-timingOrder(b.controlTiming));
   const seen = new Set();
   const deduped = sorted.filter(sp => {
     const key = sp.latinName.toLowerCase();
     if(seen.has(key)) return false;
-    seen.add(key);
-    return true;
+    seen.add(key); return true;
   });
 
   const grid = document.getElementById('speciesGrid');
   grid.innerHTML = '';
 
+  // Render DB cards first
+  dbSpecies.forEach((sp, i) => {
+    grid.appendChild(renderCuratedCard(sp, i, coords));
+  });
+
+  // Then render AI cards
   deduped.forEach((sp, i) => {
+    const cardIndex = dbSpecies.length + i;
     const card = document.createElement('div');
     card.className = 'species-card';
-    card.style.animationDelay = `${i*60}ms`;
+    card.style.animationDelay = `${cardIndex * 60}ms`;
 
     const spreadClass = sp.spreadRate==='Aggressive'?'spread-aggressive':sp.spreadRate==='Persistent'?'spread-persistent':'spread-spreading';
-    const edibleBadge = sp.isEdible ? `<span class="edible-badge">🍽️ Edible</span>` : '';
+    const edibleBadge = sp.isEdible?`<span class="edible-badge">🍽️ Edible</span>`:'';
     const tc = timingConfig(sp.controlTiming);
-    const timingPill = tc ? `<span class="timing-pill ${tc.cls}">${tc.pill}</span>` : '';
-    const timingBlock = (tc && sp.controlTimingReason) ? `
+    const timingPill = tc?`<span class="timing-pill ${tc.cls}">${tc.pill}</span>`:'';
+    const timingBlock = (tc&&sp.controlTimingReason)?`
       <div class="timing-block ${tc.blockCls}">
         <span class="timing-block-icon">${tc.icon}</span>
         <span class="timing-block-text">${sp.controlTimingReason}</span>
-      </div>` : '';
-    const edibleBlock = sp.isEdible ? `
+      </div>`:'';
+    const edibleBlock = sp.isEdible?`
       <div class="detail-block block-edible">
         <h4>🍽️ Foraging Notes</h4>
         <p>${sp.foragingNote||''}</p>
-      </div>` : '';
-    const forageWarning = sp.isEdible ? `<div class="ctrl-warning">⚠️ If you're foraging this plant, don't treat it with herbicides.</div>` : '';
-    const controlsHtml = (sp.controls||[]).map(c => {
-      const cls = c.type==='Mechanical'?'ctrl-mechanical':c.type==='Cultural'?'ctrl-cultural':'ctrl-chemical';
-      const warn = c.type==='Chemical' ? forageWarning : '';
+      </div>`:'';
+    const forageWarning = sp.isEdible?`<div class="ctrl-warning">⚠️ If you're foraging this plant, don't treat it with herbicides.</div>`:'';
+    const controlsHtml = (sp.controls||[]).map(c=>{
+      const cls=c.type==='Mechanical'?'ctrl-mechanical':c.type==='Cultural'?'ctrl-cultural':'ctrl-chemical';
+      const warn=c.type==='Chemical'?forageWarning:'';
       return `<div class="control-row"><span class="ctrl-label ${cls}">${c.type}</span><div><div class="ctrl-text">${c.description}</div>${warn}</div></div>`;
     }).join('');
 
-    const heroId = `hero-${i}`;
-    const inatLinkId = `inat-${i}`;
+    const heroId = `hero-ai-${i}`;
+    const inatLinkId = `inat-ai-${i}`;
 
     card.innerHTML = `
       <div class="card-header" onclick="toggleCard(this.parentElement)">
-        <div class="hero-wrap" id="${heroId}">
-          <div class="hero-placeholder">🌿</div>
-        </div>
-        <div class="rank-badge">${i+1}</div>
+        <div class="hero-wrap" id="${heroId}"><div class="hero-placeholder">🌿</div></div>
+        <div class="rank-badge">${cardIndex+1}</div>
         <div class="card-meta">
           <div class="name-row">
             <span class="species-common">${sp.commonName}</span>
@@ -682,127 +1301,78 @@ function renderSpecies(data, coords) {
       <div class="card-body">
         <div class="detail-grid">
           ${timingBlock}
-          <div class="detail-block">
-            <h4>Why It Outcompetes Natives</h4>
-            <p>${sp.whyItSpreads||''}</p>
-          </div>
-          <div class="detail-block">
-            <h4>How to Identify</h4>
-            <p>${sp.howToIdentify||''}</p>
-          </div>
+          <div class="detail-block"><h4>Why It Outcompetes Natives</h4><p>${sp.whyItSpreads||''}</p></div>
+          <div class="detail-block"><h4>How to Identify</h4><p>${sp.howToIdentify||''}</p></div>
           <div class="detail-block block-season">
             <h4>${seasonEmoji[season]} What to Look For This ${cap(season)}</h4>
             <p>${sp.seasonalTip||''}</p>
           </div>
-          <div class="detail-block">
-            <h4>What It Displaces</h4>
-            <p>${sp.whatItDisplaces||''}</p>
-          </div>
+          <div class="detail-block"><h4>What It Displaces</h4><p>${sp.whatItDisplaces||''}</p></div>
           ${edibleBlock}
-          <div class="detail-block block-controls">
-            <h4>How to Manage It</h4>
-            ${controlsHtml}
-          </div>
+          <div class="detail-block block-controls"><h4>How to Manage It</h4>${controlsHtml}</div>
         </div>
-        <div class="inat-link" id="${inatLinkId}">📸 All observations across every season: <a href="#" style="opacity:.4">loading...</a></div>
+        <div class="inat-link" id="${inatLinkId}">📸 All observations: <a href="#" style="opacity:.4">loading...</a></div>
       </div>
     `;
     grid.appendChild(card);
 
-    fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month, season).then(photo => {
-      const wrap = document.getElementById(heroId);
-      if(!wrap || !photo) return;
-      const largeSrc = photo.large;
-      const obsUrl = 'https://www.inaturalist.org/observations/' + photo.obsId;
-      wrap.innerHTML = `
-        <img class="hero-img" src="${photo.src}" alt="${sp.commonName}" data-large="${photo.large}" data-obsurl="https://www.inaturalist.org/observations/${photo.obsId}" data-observer="${photo.observer}" data-name="${sp.commonName}" />
-        <div class="hero-credit"><a href="https://www.inaturalist.org/observations/${photo.obsId}" target="_blank">© ${photo.observer}</a></div>
-        <div class="hero-expand-hint">tap to enlarge</div>
-      `;
-      const img = wrap.querySelector('.hero-img');
-      img.onload = () => img.classList.add('loaded');
-      img.onerror = () => { wrap.innerHTML = '<div class="hero-placeholder">🌿</div>'; };
-      img.addEventListener('click', (e) => {
-        const parentCard = wrap.closest('.species-card');
-        if(!parentCard || !parentCard.classList.contains('open')) return;
+    fetchHeroPhoto(sp.latinName,coords.lat,coords.lon,month,season).then(photo=>{
+      const wrap=document.getElementById(heroId);
+      if(!wrap||!photo) return;
+      wrap.innerHTML=`<img class="hero-img" src="${photo.src}" alt="${sp.commonName}" data-large="${photo.large}" data-obsurl="https://www.inaturalist.org/observations/${photo.obsId}" data-observer="${photo.observer}" data-name="${sp.commonName}"/><div class="hero-credit"><a href="https://www.inaturalist.org/observations/${photo.obsId}" target="_blank">© ${photo.observer}</a></div><div class="hero-expand-hint">tap to enlarge</div>`;
+      const img=wrap.querySelector('.hero-img');
+      img.onload=()=>img.classList.add('loaded');
+      img.onerror=()=>{wrap.innerHTML='<div class="hero-placeholder">🌿</div>';};
+      img.addEventListener('click',(e)=>{
+        const parentCard=wrap.closest('.species-card');
+        if(!parentCard||!parentCard.classList.contains('open')) return;
         e.stopPropagation();
-        openLightbox(img.dataset.large, img.dataset.obsurl, img.dataset.observer, img.dataset.name);
+        openLightbox(img.dataset.large,img.dataset.obsurl,img.dataset.observer,img.dataset.name);
       });
     });
 
-    fetchInatTaxaUrl(sp.latinName).then(taxaUrl => {
-      const linkEl = document.getElementById(inatLinkId);
-      if(linkEl) linkEl.innerHTML = `📸 All observations across every season: <a href="${taxaUrl}" target="_blank">iNaturalist species page →</a>`;
+    fetchInatTaxaUrl(sp.latinName).then(taxaUrl=>{
+      const linkEl=document.getElementById(inatLinkId);
+      if(linkEl) linkEl.innerHTML=`📸 All observations: <a href="${taxaUrl}" target="_blank">iNaturalist species page →</a>`;
     });
   });
 
   document.getElementById('results').classList.add('visible');
 }
 
-// Cache key: zip + month name (e.g. "01002-march")
-// Valid for the whole calendar month — 12 buckets per zip per year
-function getCacheKey(zip) {
-  const month = new Date().toLocaleString('en-US', { month: 'long' }).toLowerCase();
-  return `weedwatch-${zip}-${month}`;
-}
-
-function readCache(zip) {
-  try {
-    const key = getCacheKey(zip);
-    const raw = localStorage.getItem(key);
-    if(!raw) return null;
-    return JSON.parse(raw);
-  } catch(e) { return null; }
-}
-
-function writeCache(zip, data) {
-  try {
-    // Also store the month so we can show it was cached
-    const key = getCacheKey(zip);
-    localStorage.setItem(key, JSON.stringify(data));
-    // Clean up old entries for this zip from other months
-    const month = new Date().toLocaleString('en-US', { month: 'long' }).toLowerCase();
-    const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
-    months.filter(m => m !== month).forEach(m => {
-      localStorage.removeItem(`weedwatch-${zip}-${m}`);
-    });
-  } catch(e) {}
-}
-
+// ═══════════════════════════════════════════════════════════════
+// FETCH
+// ═══════════════════════════════════════════════════════════════
 async function fetchSpecies() {
-  const zip = document.getElementById('zipInput').value.trim();
+  const zip=document.getElementById('zipInput').value.trim();
   if(!/^\d{5}$/.test(zip)){
-    const e = document.getElementById('errorMsg');
-    e.textContent = 'Please enter a valid 5-digit US zip code.';
-    e.classList.add('visible');
-    return;
+    const e=document.getElementById('errorMsg');
+    e.textContent='Please enter a valid 5-digit US zip code.';
+    e.classList.add('visible'); return;
   }
   document.getElementById('errorMsg').classList.remove('visible');
   document.getElementById('results').classList.remove('visible');
   document.getElementById('loading').classList.add('visible');
-  document.getElementById('searchBtn').disabled = true;
+  document.getElementById('searchBtn').disabled=true;
   startLoading();
 
-  const season = getSeason();
-  const today = new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const season=getActiveSeason();
+  const today=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
-  try {
-    const coords = await zipToCoords(zip);
-
-    // Check cache before calling the API
-    const cached = readCache(zip);
-    if(cached) {
+  try{
+    const coords=await zipToCoords(zip);
+    const cached=readCache(zip);
+    if(cached){
       stopLoading();
       document.getElementById('loading').classList.remove('visible');
-      document.getElementById('searchBtn').disabled = false;
-      renderSpecies(cached.data, cached.coords);
+      document.getElementById('searchBtn').disabled=false;
+      renderSpecies(cached.data,cached.coords);
       return;
     }
 
-    // Now we know the state — build the regionalized prompt pool
     buildPromptPool(coords.state);
 
-    const prompt = `You are an expert botanist, native plant advocate, and restoration ecologist for the United States.
+    const prompt=`You are an expert botanist, native plant advocate, and restoration ecologist for the United States.
 
 A home gardener wants to help native plants, pollinators, and local wildlife by learning which fast-spreading plants are crowding out natives on their property. Your tone is empowering, warm, and practical.
 
@@ -813,19 +1383,17 @@ Current season: ${season}
 CRITICAL LANGUAGE RULES:
 - Never use the word "invasive" anywhere in your response
 - The headline must be warm and empowering, focused on what the gardener is making room FOR
-- Good headline examples: "Make room for your Berkshire natives", "Give your Connecticut River Valley wildflowers room to breathe"
 - Every species in the list must be unique — never repeat the same plant twice
 
-SEASONAL CONTROL TIMING — use exactly these three values, nothing else:
+SEASONAL CONTROL TIMING — use exactly these three values:
 - "Ideal" = one of the best windows of the year for mechanical or cultural control
 - "Caution" = action is possible but timing is not optimal
 - "Poor" = acting now is ineffective or could make things worse
-The controlTiming field must contain ONLY one of these three words: Ideal, Caution, or Poor.
 
 Return ONLY a raw JSON object (no markdown, no backticks):
 {
   "region": "Specific region name",
-  "headline": "Short warm empowering phrase — never uses the word invasive, focused on native plants",
+  "headline": "Short warm empowering phrase",
   "seasonalNote": "One sentence about what fast-spreading plants are doing RIGHT NOW in ${season} in this region",
   "species": [
     {
@@ -833,61 +1401,52 @@ Return ONLY a raw JSON object (no markdown, no backticks):
       "latinName": "Genus species",
       "spreadRate": "Aggressive" or "Persistent" or "Spreading",
       "isEdible": true or false,
-      "foragingNote": "Only if isEdible: exact harvest window, preparation, safety. Repeated harvesting is itself a control method.",
+      "foragingNote": "Only if isEdible",
       "controlTiming": "Ideal" or "Caution" or "Poor",
-      "controlTimingReason": "One clear sentence explaining why — and if Poor, when the best window actually is",
-      "whyItSpreads": "2 sentences on ecological mechanisms",
-      "howToIdentify": "2-3 sentences on key visual ID features",
-      "seasonalTip": "What this plant looks like RIGHT NOW and the single most useful action a gardener can take today",
-      "whatItDisplaces": "1-2 sentences on native plants, pollinators, or wildlife affected",
+      "controlTimingReason": "One clear sentence explaining why",
+      "whyItSpreads": "2 sentences",
+      "howToIdentify": "2-3 sentences",
+      "seasonalTip": "What this plant looks like RIGHT NOW and the single most useful action today",
+      "whatItDisplaces": "1-2 sentences",
       "controls": [
-        { "type": "Mechanical", "description": "Specific technique, timing, root depth, regrowth risk. ALWAYS include disposal: bag for landfill, burn where legal, or dry on pavement. Warn explicitly if any part must NEVER be composted and why. Note seed or berry spread risk." },
-        { "type": "Cultural", "description": "Native planting, mulching, or ecological approaches that give natives a competitive edge" },
-        { "type": "Chemical", "description": "Last resort only. Specific herbicide, method, timing." }
+        { "type": "Mechanical", "description": "Specific technique with disposal instructions" },
+        { "type": "Cultural", "description": "Native planting or ecological approaches" },
+        { "type": "Chemical", "description": "Last resort only" }
       ]
     }
   ]
 }
 
-Return the 10 most ecologically impactful fast-spreading plants for this region ordered by ecological impact. Be concise — every field should be as brief as possible while remaining useful. Be precise to this location's actual ecology.`;
+Return the 10 most ecologically impactful fast-spreading plants for this region ordered by ecological impact. Be concise. Be precise to this location's actual ecology.`;
 
-    const resp = await fetch('/api/species', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
-
-    const aiData = await resp.json();
+    const resp=await fetch('/api/species',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    const aiData=await resp.json();
     if(!resp.ok) throw new Error('API error');
     if(aiData.stop_reason==='max_tokens') throw new Error('truncated');
-    const text = aiData.content.map(b => b.text||'').join('');
-    const clean = text.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(clean);
+    const text=aiData.content.map(b=>b.text||'').join('');
+    const clean=text.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
 
-    // Save to cache before rendering
-    writeCache(zip, { data: parsed, coords });
-
+    writeCache(zip,{data:parsed,coords});
     stopLoading();
     document.getElementById('loading').classList.remove('visible');
-    document.getElementById('searchBtn').disabled = false;
-    renderSpecies(parsed, coords);
+    document.getElementById('searchBtn').disabled=false;
+    renderSpecies(parsed,coords);
 
-  } catch(err) {
+  }catch(err){
     stopLoading();
     document.getElementById('loading').classList.remove('visible');
-    document.getElementById('searchBtn').disabled = false;
-    const e = document.getElementById('errorMsg');
-    if(err.message==='zip_not_found') e.textContent = 'Zip code not found. Please check and try again.';
-    else if(err.message==='truncated') e.textContent = 'Response was cut off — please try again.';
-    else e.textContent = 'Something went wrong generating your plant guide. Please try again.';
+    document.getElementById('searchBtn').disabled=false;
+    const e=document.getElementById('errorMsg');
+    if(err.message==='zip_not_found') e.textContent='Zip code not found. Please check and try again.';
+    else if(err.message==='truncated') e.textContent='Response was cut off — please try again.';
+    else e.textContent='Something went wrong generating your plant guide. Please try again.';
     e.classList.add('visible');
     console.error(err);
   }
 }
 
-document.getElementById('zipInput').addEventListener('keydown', e => {
-  if(e.key==='Enter') fetchSpecies();
-});
+document.getElementById('zipInput').addEventListener('keydown',e=>{if(e.key==='Enter')fetchSpecies();});
 </script>
 </body>
 </html>
