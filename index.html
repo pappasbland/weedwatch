@@ -425,8 +425,8 @@ const SPECIES_DB = [
         rating: 'Ideal',
         phenologyCue: 'When trout lilies are blooming on the forest floor, Garlic Mustard is at its most pullable — bolted, identifiable, and not yet seeding. This window is roughly three weeks. Do not wait.',
         title: 'Pull at bolt stage — before seed set',
-        description: 'Grasp the stem at the base and pull firmly — the taproot lifts cleanly from spring-moist soil with very little effort. Work systematically across the patch. One person can clear a significant area in an hour.',
-        whyNow: 'The taproot is shallow, the soil is moist, and the plant has not yet invested its energy into seed production. This is the one moment where a small amount of effort produces a large result.',
+        description: 'Grasp the flower stem at the base and pull firmly — the taproot lifts cleanly from spring-moist soil with very little effort. Work systematically across the patch.',
+        whyNow: 'The taproot is shallow, the soil is moist, and the plant has not yet invested its energy into seed production. This is your best window — effort here has outsized results.',
         watchFor: 'White flower clusters forming at stem tips — this is your signal that the window is open but closing. The sweet spot is just before or at first bloom.',
         disposal: 'Bag everything and landfill — do not compost. Seeds can mature on pulled plants left on the ground. If plants have already flowered but seed pods are still green and firm, bag immediately — you are still within the window. If pods have begun to dry and split, you are too late this season — bag anyway to limit further spread but expect regrowth next year. In rural areas where burning is permitted, a hot fire is an effective alternative. Ensure all material is fully incinerated, not left to smolder.',
         doNotDo: 'Do not pull after seed pods have turned brown and begun to split. At that point pulling scatters seeds and makes things actively worse. Walk away, mark the patch, and return three weeks earlier next spring.'
@@ -459,6 +459,11 @@ const SPECIES_DB = [
       }
     },
     foragingNote: 'Young bolted stems, leaves and flowers are all edible before seed set — this is your free broccoli rabe substitute. Pull it, eat it, eliminate it in one move. For preparation ideas consult a regional foraging guide. Do not forage near roadsides or anywhere that may have been treated with herbicide.',
+    photoTerms: {
+      '1': 'rosette', '2': 'rosette', '3': 'rosette',
+      '4': 'flower',  '5': 'flower',
+      '11': 'rosette', '12': 'rosette'
+    },
     quiz: {
       keyFeatures: ['Garlic smell when leaves crushed — definitive','Kidney-shaped scalloped leaves in year-one rosette','Triangular toothed leaves on year-two bolt','Small white four-petaled flowers','Long thin seed pods'],
       lookAlikesNote: 'Year-one rosettes occasionally confused with native wild ginger or violets. Crush a leaf — the garlic smell is unmistakable and no native Northeast plant shares it.'
@@ -875,7 +880,7 @@ function renderCuratedCard(sp, index, coords) {
       <div class="control-window" style="${!isHighlighted && sp.controlWindows.length > 1 ? 'opacity:0.55' : ''}">
         <div class="window-header">
           <span class="window-title">${w.title}</span>
-          <span class="timing-pill ${wTc ? wTc.cls : ''}">${wTc ? wTc.pill : w.rating}</span>
+          <span class="timing-pill ${wTc ? wTc.cls : ''}">${isHighlighted && comingSoon ? (wTc ? wTc.cls.includes('ideal') ? '🟢 Ideal Window Coming Soon' : wTc.cls.includes('caution') ? '🟡 Caution Window Coming Soon' : '🔴 Window Coming Soon' : w.rating) : (wTc ? wTc.pill : w.rating)}</span>
           <span class="window-method ${wMethodCls}">${w.method}</span>
           <span class="window-months">${wMonthNames}</span>
         </div>
@@ -976,8 +981,7 @@ function renderCuratedCard(sp, index, coords) {
   `;
 
   // Hero photo
-  fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month, season).then(photo => {
-    const wrap = document.getElementById(heroId);
+  fetchHeroPhoto(sp.latinName, coords.lat, coords.lon, month, season, sp.photoTerms).then(photo => {
     if(!wrap || !photo) return;
     wrap.innerHTML = `
       <img class="hero-img" src="${photo.src}" alt="${sp.commonName}"
@@ -1129,15 +1133,22 @@ async function fetchInatTaxaUrl(latinName) {
 }
 
 function seasonalPhotoTerm(season) {
-  if(season==='winter'||season==='spring') return 'stem bark';
+  if(season==='winter') return 'rosette';
+  if(season==='spring') return 'stem bark';
   if(season==='summer') return 'leaf flower';
   if(season==='fall')   return 'fruit berry';
   return '';
 }
 
-async function fetchHeroPhoto(latinName, lat, lon, month, season) {
+// Get photo search term — uses species photoTerms if available, falls back to seasonal default
+function getPhotoTerm(month, season, photoTerms) {
+  if(photoTerms && photoTerms[String(month)]) return photoTerms[String(month)];
+  return seasonalPhotoTerm(season);
+}
+
+async function fetchHeroPhoto(latinName, lat, lon, month, season, photoTerms) {
   const months=[month,month===1?12:month-1,month===12?1:month+1];
-  const term=seasonalPhotoTerm(season);
+  const term=getPhotoTerm(month, season, photoTerms);
   const queries=term?[term,'']:[''];
   for(const q of queries){
     for(const m of months){
@@ -1345,7 +1356,7 @@ function renderSpecies(data, coords) {
     `;
     grid.appendChild(card);
 
-    fetchHeroPhoto(sp.latinName,coords.lat,coords.lon,month,season).then(photo=>{
+    fetchHeroPhoto(sp.latinName,coords.lat,coords.lon,month,season,null).then(photo=>{
       const wrap=document.getElementById(heroId);
       if(!wrap||!photo) return;
       wrap.innerHTML=`<img class="hero-img" src="${photo.src}" alt="${sp.commonName}" data-large="${photo.large}" data-obsurl="https://www.inaturalist.org/observations/${photo.obsId}" data-observer="${photo.observer}" data-name="${sp.commonName}"/><div class="hero-credit"><a href="https://www.inaturalist.org/observations/${photo.obsId}" target="_blank">© ${photo.observer}</a></div><div class="hero-expand-hint">tap to enlarge</div>`;
