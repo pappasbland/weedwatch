@@ -285,7 +285,7 @@
   }
 
   /* Curated ecology + tools sections */
-  .curated-sections { padding:0 20px 20px; display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:4px; }
+  .curated-sections { padding:16px 20px 20px; display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:0; }
   @media(max-width:580px){ .curated-sections{ grid-template-columns:1fr; } }
   .curated-section h4 { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--sage); margin-bottom:8px; }
   .curated-section p, .curated-section li { font-size:15px; color:var(--cream); line-height:1.7; font-weight:400; }
@@ -612,7 +612,8 @@ const SPECIES_DB = [
         whyNow: 'The vine is at maximum visibility — every plant announces itself with yellow-orange and red berries. Severing at the base now protects trees immediately and sets up thorough root removal in spring.',
         watchFor: 'Yellow-orange capsules splitting to reveal bright red berries along the full length of the vine — not just at the tips. That berry distribution along the whole stem confirms Oriental rather than native American Bittersweet.',
         disposal: 'Do not bag or move any material with berries still attached — handling spreads seeds. Leave severed above-ground growth in place until winter. Bag root material that you are able to dig now for landfill. In rural areas where burning is permitted, a hot fire destroys seeds and vine material effectively — ensure full incineration.',
-        doNotDo: 'Do not cut vines heavy with berries for decorative use — this is one of the primary ways bittersweet spreads into new areas. Bare vines pulled in late winter are fine for wreath-making once confirmed dead and berry-free. Do not pull vines down from trees when berries are present.'
+        doNotDo: 'Do not cut vines heavy with berries for decorative use — this is one of the primary ways bittersweet spreads into new areas. Bare vines pulled in late winter are fine for wreath-making once confirmed dead and berry-free. Do not pull vines down from trees when berries are present.',
+        toolsKey: 'fall-sever'
       },
       {
         months: [3, 4],
@@ -624,7 +625,8 @@ const SPECIES_DB = [
         whyNow: 'Ground is workable, vines are leafless and easy to trace, and new shoots are just emerging making young plants easy to spot before they establish. This is the window where effort has the most lasting impact.',
         watchFor: 'New reddish-green shoots emerging from root crowns at the base of trees and along woodland edges. Also look for the distinctive orange interior of cut roots — your confirmation you have the right plant.',
         disposal: 'Bag all root and vine material for landfill. Root fragments left on moist ground can re-root — do not leave piles for later. In rural areas where burning is permitted, a hot fire is an effective alternative to landfill for root and vine material.',
-        doNotDo: 'Do not assume the job is finished in one session. Bittersweet root systems are extensive and lateral runners can be followed for many feet. Mark the area and return throughout spring as new shoots emerge.'
+        doNotDo: 'Do not assume the job is finished in one session. Bittersweet root systems are extensive and lateral runners can be followed for many feet. Mark the area and return throughout spring as new shoots emerge.',
+        toolsKey: 'spring-root'
       },
       {
         months: [6, 7, 8],
@@ -641,8 +643,20 @@ const SPECIES_DB = [
     ],
     tools: {
       required: ['Loppers for severing vines at base','Clippers or pruners for smaller stems','Pruning saw for thick established vines','Heavy duty lawn bags','Gloves'],
-      recommended: ['Mattock for root crown removal','Flagging tape to mark severed vines in fall for spring root follow-up'],
-      notes: 'The two-stage removal — sever in fall, dig roots in spring — means two separate tool deployments. Flagging tape sounds trivial but makes the spring root work dramatically easier. Mark every crown you sever in October.'
+      recommended: ['Mattock for root crown removal'],
+      notes: 'Spring root removal is the most impactful work — trace every crown you can find and dig thoroughly.'
+    },
+    windowTools: {
+      'fall-sever': {
+        required: ['Loppers for severing vines at base','Clippers or pruners for smaller stems','Pruning saw for thick established vines','Heavy duty lawn bags','Gloves'],
+        recommended: ['Flagging tape to mark severed crowns for spring follow-up'],
+        notes: 'Flagging tape sounds trivial but makes the spring root work dramatically easier. Mark every crown you sever in October. The two-stage removal — sever in fall, dig roots in spring — is the most effective approach.'
+      },
+      'spring-root': {
+        required: ['Mattock or spade','Heavy duty lawn bags','Gloves'],
+        recommended: ['Loppers or pruning saw to clear dead above-ground material first'],
+        notes: 'Spring root removal is the most impactful work. Follow lateral runners as far as you can — every fragment left in moist soil can re-root.'
+      }
     },
     identification: {
       byMonth: {
@@ -949,9 +963,12 @@ function renderCuratedCard(sp, index, coords) {
       </div>`;
   })();
 
-  // Tools list
-  const reqTools = sp.tools.required.map(t => `<li>${t}</li>`).join('');
-  const recTools = sp.tools.recommended.map(t => `<li>${t}</li>`).join('');
+  // Tools — use window-specific tools if available, fall back to species tools
+  const activeTools = (activeWindow.toolsKey && sp.windowTools && sp.windowTools[activeWindow.toolsKey])
+    ? sp.windowTools[activeWindow.toolsKey]
+    : sp.tools;
+  const reqTools = activeTools.required.map(t => `<li>${t}</li>`).join('');
+  const recTools = activeTools.recommended.map(t => `<li>${t}</li>`).join('');
 
   card.innerHTML = `
     <div class="card-header" onclick="toggleCard(this.parentElement)">
@@ -1017,7 +1034,7 @@ function renderCuratedCard(sp, index, coords) {
           <h4>Tools</h4>
           <ul>${reqTools}</ul>
           ${sp.tools.recommended.length ? `<div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--lichen);margin:8px 0 4px;">Also useful</div><ul>${recTools}</ul>` : ''}
-          ${sp.tools.notes ? `<p style="margin-top:8px;font-style:italic;color:var(--lichen);font-size:14px;">${sp.tools.notes}</p>` : ''}
+          ${activeTools.notes ? `<p style="margin-top:8px;font-style:italic;color:var(--lichen);font-size:14px;">${activeTools.notes}</p>` : ''}
         </div>
       </div>
 
