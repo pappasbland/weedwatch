@@ -776,34 +776,56 @@ function methodClass(method) {
   return 'ctrl-mechanical';
 }
 
-// Find the best control window for the current month
-function getActiveWindow(sp, month) {
-  // Exact month match first
-  const exact = sp.controlWindows.find(w => w.months.includes(month));
-  if(exact) return exact;
-  // Otherwise find the next upcoming window
-  let best = null, bestDist = 99;
-  for(const w of sp.controlWindows) {
-    for(const m of w.months) {
-      const dist = (m - month + 12) % 12;
-      if(dist < bestDist) { bestDist = dist; best = w; }
-    }
+// Weeks until the nearest month in a window (0 if current month is in window)
+function weeksUntilWindow(w, month) {
+  let minDist = 99;
+  for(const m of w.months) {
+    const dist = (m - month + 12) % 12;
+    if(dist < minDist) minDist = dist;
   }
-  return best;
+  // dist is in months; multiply by ~4.3 to get weeks
+  return Math.round(minDist * 4.3);
 }
 
-// Find the next ideal window from now
-function getNextIdealWindow(sp, month) {
-  const idealWindows = sp.controlWindows.filter(w => w.rating === 'Ideal');
-  if(!idealWindows.length) return null;
-  let best = null, bestDist = 99;
-  for(const w of idealWindows) {
-    for(const m of w.months) {
-      const dist = (m - month + 12) % 12;
-      if(dist > 0 && dist < bestDist) { bestDist = dist; best = w; }
-    }
+// Returns null if the species should be hidden entirely this month.
+// Otherwise returns { activeWindow, timingPillHtml } for the card header.
+function getCuratedWindowState(sp, month) {
+  const isActiveMonth = w => w.months.includes(month);
+
+  // Is there a window active right now?
+  const nowWindow = sp.controlWindows.find(isActiveMonth);
+  if(nowWindow) {
+    const tc = timingConfig(nowWindow.rating);
+    const pill = tc ? `<span class="timing-pill ${tc.cls}">${tc.pill}</span>` : '';
+    return { activeWindow: nowWindow, timingPillHtml: pill, comingSoon: false };
   }
-  return best || idealWindows[0];
+
+  // No active window — find the nearest upcoming window of any kind
+  let nearest = null, nearestWeeks = 99;
+  for(const w of sp.controlWindows) {
+    const weeks = weeksUntilWindow(w, month);
+    if(weeks > 0 && weeks < nearestWeeks) { nearestWeeks = weeks; nearest = w; }
+  }
+
+  // Hide if nearest window is 6+ weeks away
+  if(!nearest || nearestWeeks >= 6) return null;
+
+  // Coming soon — within 6 weeks
+  // Pill text reflects the rating of the upcoming window
+  const r = nearest.rating.toLowerCase();
+  let pillCls, pillText;
+  if(r.includes('ideal')) {
+    pillCls = 'timing-ideal';
+    pillText = '🟢 Ideal Window Coming Soon';
+  } else if(r.includes('caution')) {
+    pillCls = 'timing-caution';
+    pillText = '🟡 Caution Window Coming Soon';
+  } else {
+    pillCls = 'timing-poor';
+    pillText = '🔴 Window Coming Soon';
+  }
+  const pill = `<span class="timing-pill ${pillCls}">${pillText}</span>`;
+  return { activeWindow: nearest, timingPillHtml: pill, comingSoon: true };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -814,38 +836,51 @@ function renderCuratedCard(sp, index, coords) {
   const season = getActiveSeason(month);
   const monthName = MONTH_NAMES[month - 1];
 
+  // Check visibility — returns null if species should be hidden this month
+  const windowState = getCuratedWindowState(sp, month);
+  if(!windowState) return null;
+
+  const { activeWindow, timingPillHtml, comingSoon } = windowState;
+
   const card = document.createElement('div');
   card.className = 'species-card';
   card.style.animationDelay = `${index * 60}ms`;
 
   const spreadClass = sp.spreadRate==='Aggressive'?'spread-aggressive':sp.spreadRate==='Persistent'?'spread-persistent':'spread-spreading';
-  const activeWindow = getActiveWindow(sp, month);
-  const tc = activeWindow ? timingConfig(activeWindow.rating) : null;
-  const timingPill = tc ? `<span class="timing-pill ${tc.cls}">${tc.pill}</span>` : '';
   const edibleBadge = sp.isEdible ? `<span class="edible-badge">🍽️ Edible</span>` : '';
   const heroId = `hero-db-${index}`;
   const inatLinkId = `inat-db-${index}`;
 
-  // Month ID text
+  // Month ID text — from byMonth identification
   const monthIdText = sp.identification.byMonth[String(month)] || '';
 
-  // Determine which windows to show — active window first, others collapsed
-  const windowsHtml = sp.controlWindows.map((w, wi) => {
-    const isActive = w === activeWindow;
+  // Build How to Identify — append garlic smell note for Garlic Mustard
+  // More generally: append any quiz keyFeatures that contain smell/scent cues
+  // so they surface in the visible text rather than being hidden in quiz data
+  const scentFeature = (sp.quiz.keyFeatures || []).find(f =>
+    f.toLowerCase().includes('smell') || f.toLowerCase().includes('scent') || f.toLowerCase().includes('crush')
+  );
+  const howToIdentify = sp.ecology.howToIdentify +
+    (scentFeature ? ` ${scentFeature}.` : '');
+
+  // Control windows — all shown, active/coming-soon window highlighted
+  const windowsHtml = sp.controlWindows.map((w) => {
+    const isHighlighted = w === activeWindow;
     const wTc = timingConfig(w.rating);
     const wMethodCls = methodClass(w.method);
     const wMonthNames = w.months.map(m => MONTH_NAMES[m-1].substring(0,3)).join(', ');
-    const isCurrentMonth = w.months.includes(month);
+    const showPhenology = isHighlighted; // phenology cue only on the relevant window
 
     return `
-      <div class="control-window" style="${!isActive && sp.controlWindows.length > 1 ? 'opacity:0.6' : ''}">
+      <div class="control-window" style="${!isHighlighted && sp.controlWindows.length > 1 ? 'opacity:0.55' : ''}">
         <div class="window-header">
           <span class="window-title">${w.title}</span>
           <span class="timing-pill ${wTc ? wTc.cls : ''}">${wTc ? wTc.pill : w.rating}</span>
           <span class="window-method ${wMethodCls}">${w.method}</span>
           <span class="window-months">${wMonthNames}</span>
         </div>
-        ${isActive || isCurrentMonth ? `<div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);margin-bottom:8px;">🌿 Phenology Cue</div>
+        ${showPhenology && w.phenologyCue ? `
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);margin-bottom:6px;">🌿 Phenology Cue</div>
         <div style="font-family:'Playfair Display',serif;font-size:14px;font-style:italic;color:#c8e0a0;line-height:1.65;margin-bottom:12px;">${w.phenologyCue}</div>` : ''}
         <div class="window-description">${w.description.replace(/\n/g,'<br><br>')}</div>
         <div class="window-why-now">⏱ ${w.whyNow}</div>
@@ -883,7 +918,7 @@ function renderCuratedCard(sp, index, coords) {
         <div class="species-latin">${sp.latinName}</div>
         <div class="pills-row">
           <span class="spread-pill ${spreadClass}">${sp.spreadRate}</span>
-          ${timingPill}
+          ${timingPillHtml}
         </div>
       </div>
       <div class="expand-col"><span class="expand-icon">+</span></div>
@@ -897,17 +932,6 @@ function renderCuratedCard(sp, index, coords) {
         <span class="month-id-text">${monthIdText}</span>
       </div>` : ''}
 
-      ${activeWindow && activeWindow.phenologyCue ? `
-      <div class="phenology-cue">
-        <span class="phenology-cue-label">🌿 Phenology cue</span>
-        ${activeWindow.phenologyCue}
-      </div>` : ''}
-
-      <div style="padding:12px 20px 0;">
-        <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Control Windows</div>
-      </div>
-      ${windowsHtml}
-
       <div class="curated-sections">
         <div class="curated-section">
           <h4>Why It Spreads</h4>
@@ -919,7 +943,7 @@ function renderCuratedCard(sp, index, coords) {
         </div>
         <div class="curated-section full">
           <h4>How to Identify</h4>
-          <p>${sp.ecology.howToIdentify}</p>
+          <p>${howToIdentify}</p>
         </div>
         ${sp.tickNote ? `
         <div class="curated-section tick-note">
@@ -931,16 +955,19 @@ function renderCuratedCard(sp, index, coords) {
           <h4>🍽️ Foraging</h4>
           <p>${sp.foragingNote}</p>
         </div>` : ''}
+      </div>
+
+      <div style="padding:4px 20px 0;">
+        <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--sage);margin-bottom:4px;">Control Windows</div>
+      </div>
+      ${windowsHtml}
+
+      <div class="curated-sections" style="padding-top:0;">
         <div class="curated-section full">
           <h4>Tools</h4>
           <ul>${reqTools}</ul>
           ${sp.tools.recommended.length ? `<div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--lichen);margin:8px 0 4px;">Also useful</div><ul>${recTools}</ul>` : ''}
           ${sp.tools.notes ? `<p style="margin-top:8px;font-style:italic;color:var(--lichen);font-size:14px;">${sp.tools.notes}</p>` : ''}
-        </div>
-        <div class="curated-section full">
-          <h4>Key ID Features</h4>
-          <ul>${sp.quiz.keyFeatures.map(f=>`<li>${f}</li>`).join('')}</ul>
-          <p style="margin-top:8px;font-style:italic;color:var(--lichen);font-size:14px;">${sp.quiz.lookAlikesNote}</p>
         </div>
       </div>
 
@@ -1245,9 +1272,11 @@ function renderSpecies(data, coords) {
   const grid = document.getElementById('speciesGrid');
   grid.innerHTML = '';
 
-  // Render DB cards first
+  // Render DB cards first — renderCuratedCard returns null if species hidden this month
+  let visibleDbCount = 0;
   dbSpecies.forEach((sp, i) => {
-    grid.appendChild(renderCuratedCard(sp, i, coords));
+    const card = renderCuratedCard(sp, i, coords);
+    if(card) { grid.appendChild(card); visibleDbCount++; }
   });
 
   // Then render AI cards
