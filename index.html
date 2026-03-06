@@ -231,7 +231,26 @@
     color:#f07050; display:block; margin-bottom:3px;
   }
 
-  /* Merged blocks */
+  /* Collapsed window rows */
+  .control-window-collapsed {
+    padding:10px 20px;
+    border-bottom:1px solid rgba(138,171,92,.08);
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .control-window-collapsed:hover { background:rgba(138,171,92,.04); }
+  .collapsed-header {
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  .collapsed-title {
+    font-family:'DM Sans',sans-serif; font-size:13px;
+    color:var(--lichen); font-weight:400; flex:1; min-width:0;
+  }
+  .collapsed-chevron {
+    font-size:16px; color:var(--sage); opacity:.5;
+    transition:transform .2s; flex-shrink:0;
+  }
+  .collapsed-chevron.open { transform:rotate(90deg); opacity:1; }
   .window-when {
     font-size:15px; color:#c8e0a0; line-height:1.7;
     font-family:'Playfair Display',serif; font-style:italic;
@@ -642,6 +661,11 @@ const SPECIES_DB = [
       }
     },
     foragingNote: null,
+    photoTerms: {
+      '1': 'vine tree', '2': 'vine tree', '3': 'vine tree',
+      '4': 'vine', '5': 'vine leaf',
+      '9': 'berry', '10': 'berry', '11': 'berry vine'
+    },
     quiz: {
       keyFeatures: ['Berries along entire stem length — not just at tips','Yellow-orange capsules splitting to reveal red berries','Round finely toothed leaves','Spiraling vine girdling trees and shrubs','Orange interior root color — diagnostic'],
       lookAlikesNote: 'Native American Bittersweet is now rare but critical to protect — it produces berries ONLY at stem tips, not along the full stem. Before removing any bittersweet, check berry placement. If berries are only at the tips, do not remove — you may have found a native.'
@@ -881,32 +905,64 @@ function renderCuratedCard(sp, index, coords) {
 
   const howToIdentify = sp.ecology.howToIdentify;
 
-  // Control windows — all shown, active/coming-soon window highlighted
-  const windowsHtml = sp.controlWindows.map((w) => {
+  // Control windows — active window full, others collapsed with toggle
+  const windowsHtml = sp.controlWindows.map((w, wi) => {
     const isHighlighted = w === activeWindow;
     const wTc = timingConfig(w.rating);
     const wMethodCls = methodClass(w.method);
     const wMonthNames = w.months.map(m => MONTH_NAMES[m-1].substring(0,3)).join(', ');
+    const collapseId = `window-${index}-${wi}`;
 
-    // Block 1: When & What to Look For — phenology cue + watch for merged
-    const block1 = (isHighlighted && w.phenologyCue)
+    if(!isHighlighted) {
+      // Collapsed row — title, pills, month range, tap to expand
+      return `
+        <div class="control-window-collapsed" onclick="toggleWindow('${collapseId}')">
+          <div class="collapsed-header">
+            <span class="collapsed-title">${w.title}</span>
+            <span class="timing-pill ${wTc ? wTc.cls : ''}" style="font-size:8px;">${wTc ? wTc.pill : w.rating}</span>
+            <span class="window-method ${wMethodCls}">${w.method}</span>
+            <span class="window-months">${wMonthNames}</span>
+            <span class="collapsed-chevron" id="chev-${collapseId}">›</span>
+          </div>
+          <div class="collapsed-body" id="${collapseId}" style="display:none;">
+            ${w.phenologyCue ? `<div class="window-when" style="margin-top:10px;">
+              <span class="window-when-label">🌿 When &amp; What to Look For</span>
+              ${w.phenologyCue}${w.watchFor ? ' ' + w.watchFor : ''}
+            </div>` : ''}
+            <div class="window-description" style="margin-top:8px;">
+              ${w.description.replace(/\n/g,'<br><br>')}
+              ${w.whyNow ? `<span class="window-why-inline">${w.whyNow}</span>` : ''}
+            </div>
+            <div class="window-disposal">
+              <span class="window-disposal-label">🗑 Disposal</span>
+              ${w.disposal}
+            </div>
+            ${w.doNotDo ? `<div class="window-donotdo">
+              <span class="window-donotdo-label">⚠ Do not</span>
+              ${w.doNotDo}
+            </div>` : ''}
+          </div>
+        </div>`;
+    }
+
+    // Active window — full display
+    const block1 = w.phenologyCue
       ? `<div class="window-when">
           <span class="window-when-label">🌿 When &amp; What to Look For</span>
           ${w.phenologyCue}${w.watchFor ? ' ' + w.watchFor : ''}
         </div>`
       : '';
 
-    // Block 2: How to Act — description + why now merged
     const block2 = `<div class="window-description">
       ${w.description.replace(/\n/g,'<br><br>')}
-      ${w.whyNow ? `<span class="window-why-inline"> ${w.whyNow}</span>` : ''}
+      ${w.whyNow ? `<span class="window-why-inline">${w.whyNow}</span>` : ''}
     </div>`;
 
     return `
-      <div class="control-window" style="${!isHighlighted && sp.controlWindows.length > 1 ? 'opacity:0.55' : ''}">
+      <div class="control-window">
         <div class="window-header">
           <span class="window-title">${w.title}</span>
-          <span class="timing-pill ${wTc ? wTc.cls : ''}">${isHighlighted && comingSoon ? (wTc ? wTc.cls.includes('ideal') ? '🟢 Ideal Window Coming Soon' : wTc.cls.includes('caution') ? '🟡 Caution Window Coming Soon' : '🔴 Window Coming Soon' : w.rating) : (wTc ? wTc.pill : w.rating)}</span>
+          <span class="timing-pill ${wTc ? wTc.cls : ''}">${comingSoon ? (wTc ? wTc.cls.includes('ideal') ? '🟢 Ideal Window Coming Soon' : wTc.cls.includes('caution') ? '🟡 Caution Window Coming Soon' : '🔴 Window Coming Soon' : w.rating) : (wTc ? wTc.pill : w.rating)}</span>
           <span class="window-method ${wMethodCls}">${w.method}</span>
           <span class="window-months">${wMonthNames}</span>
         </div>
@@ -1201,6 +1257,15 @@ async function fetchHeroPhoto(latinName, lat, lon, month, season, photoTerms) {
 // TOGGLE
 // ═══════════════════════════════════════════════════════════════
 function toggleCard(card) { card.classList.toggle('open'); }
+
+function toggleWindow(id) {
+  const body = document.getElementById(id);
+  const chev = document.getElementById('chev-' + id);
+  if(!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if(chev) chev.classList.toggle('open', !isOpen);
+}
 
 // ═══════════════════════════════════════════════════════════════
 // EXTENSION LINKS
