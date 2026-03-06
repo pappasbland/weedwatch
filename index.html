@@ -436,18 +436,18 @@ const SPECIES_DB = [
     ecology: {
       whyItSpreads: 'A single plant produces up to 600 seeds that remain viable in soil for five years. It also releases chemicals from its roots that suppress the mycorrhizal fungi native tree seedlings depend on — effectively poisoning the forest floor against its competition.',
       whatItDisplaces: 'Spring ephemerals — trout lily, trillium, wild ginger, bloodroot — that depend on open forest floor light before canopy closes. Also suppresses native tree seedling regeneration, reshaping forests over decades.',
-      howToIdentify: 'Year one is a low rosette of kidney-shaped scalloped leaves with a strong garlic smell when crushed. Year two it bolts to 2–4 feet with triangular toothed leaves, small white four-petaled flowers, then long thin seed pods.'
+      howToIdentify: 'Year one plants are low rosettes of kidney-shaped scalloped leaves. Year two it bolts to 2–4 feet with triangular toothed leaves, small white four-petaled flowers, then long thin seed pods. The garlic smell when the leaves are crushed is definitive.'
     },
     controlWindows: [
       {
         months: [4, 5],
         method: 'Mechanical',
         rating: 'Ideal',
-        phenologyCue: 'When trout lilies are blooming on the forest floor, Garlic Mustard is at its most pullable — bolted, identifiable, and not yet seeding. This window lasts roughly three weeks. Do not wait.',
+        phenologyCue: 'When trout lilies are blooming on the forest floor, Garlic Mustard will bolt, identifiable by white flowers forming. Controlling Garlic Mustard is very easy to do during this window, lasting roughly three weeks. Do not wait.',
         title: 'Pull at bolt stage — before seed set',
-        description: 'Grasp the flower stem at the base and pull firmly — the taproot lifts cleanly from spring-moist soil with very little effort. Work systematically across the patch.',
-        whyNow: 'The taproot is shallow, the soil is moist, and the plant has not yet invested its energy into seed production. This is your best window — effort here has outsized results.',
-        watchFor: 'White flower clusters forming at stem tips — this is your signal that the window is open but closing. The sweet spot is just before or at first bloom.',
+        description: 'Grasp the flower stem at the base and pull firmly — the taproot lifts cleanly from moist soil with very little effort. Work systematically across the patch. This is your best opportunity to control Garlic Mustard — effort here has outsized results.',
+        whyNow: 'The taproot is shallow, the soil is moist, and the plant has not yet invested its energy into seed production.',
+        watchFor: 'White flower clusters forming at stem tips signal the window is open.',
         disposal: 'Bag everything and landfill — do not compost. Seeds can mature on pulled plants left on the ground. If plants have already flowered but seed pods are still green and firm, bag immediately — you are still within the window. If pods have begun to dry and split, you are too late this season — bag anyway to limit further spread but expect regrowth next year. In rural areas where burning is permitted, a hot fire is an effective alternative. Ensure all material is fully incinerated, not left to smolder.',
         doNotDo: 'Do not pull after seed pods have turned brown and begun to split. At that point pulling scatters seeds and makes things actively worse. Walk away, mark the patch, and return three weeks earlier next spring.'
       }
@@ -879,14 +879,7 @@ function renderCuratedCard(sp, index, coords) {
   // Month ID text — from byMonth identification
   const monthIdText = sp.identification.byMonth[String(month)] || '';
 
-  // Build How to Identify — append garlic smell note for Garlic Mustard
-  // More generally: append any quiz keyFeatures that contain smell/scent cues
-  // so they surface in the visible text rather than being hidden in quiz data
-  const scentFeature = (sp.quiz.keyFeatures || []).find(f =>
-    f.toLowerCase().includes('smell') || f.toLowerCase().includes('scent') || f.toLowerCase().includes('crush')
-  );
-  const howToIdentify = sp.ecology.howToIdentify +
-    (scentFeature ? ` ${scentFeature}.` : '');
+  const howToIdentify = sp.ecology.howToIdentify;
 
   // Control windows — all shown, active/coming-soon window highlighted
   const windowsHtml = sp.controlWindows.map((w) => {
