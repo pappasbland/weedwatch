@@ -1290,12 +1290,16 @@ function openLightbox(largeSrc, obsUrl, observer, name, latinName, lat, lon, mon
   document.getElementById('lightbox').classList.add('visible');
   document.body.style.overflow = 'hidden';
 
-  // Fetch carousel photos in background
+  // Fetch carousel photos in background — prepend hero so it stays as photo 1
   if(latinName && lat && lon && month) {
     fetchCarouselPhotos(latinName, lat, lon, month).then(photos => {
       document.getElementById('lightboxLoading').textContent = '';
-      if(photos.length > 1) {
-        _carousel.photos = photos;
+      // Prepend the hero image, remove any duplicate from fetched results
+      const heroPhoto = { src: largeSrc, observer, obsId };
+      const rest = photos.filter(p => p.obsId !== obsId);
+      const combined = [heroPhoto, ...rest].slice(0, 10);
+      if(combined.length > 1) {
+        _carousel.photos = combined;
         _carousel.index = 0;
         renderCarouselFrame();
       }
@@ -1467,11 +1471,26 @@ function renderSpecies(coords) {
 
   const zone = getZone(coords.state);
   const dbSpecies = SPECIES_DB.filter(sp => sp.zones.includes(zone));
+  const sortMonth = getActiveMonth();
+
+  // Sort: active Ideal → active other → Coming Soon
+  const withState = dbSpecies.map(sp => ({ sp, state: getCuratedWindowState(sp, sortMonth) }))
+    .filter(({ state }) => state !== null);
+  withState.sort((a, b) => {
+    const rank = s => {
+      if(!s.comingSoon && s.activeWindow.rating === 'Ideal') return 0;
+      if(s.comingSoon && s.activeWindow.rating === 'Ideal') return 1;
+      if(s.comingSoon) return 2;
+      if(s.activeWindow.rating === 'Caution') return 3;
+      return 4;
+    };
+    return rank(a.state) - rank(b.state);
+  });
 
   const grid = document.getElementById('speciesGrid');
   grid.innerHTML = '';
 
-  dbSpecies.forEach((sp, i) => {
+  withState.forEach(({ sp }, i) => {
     const card = renderCuratedCard(sp, i, coords);
     if(card) grid.appendChild(card);
   });
