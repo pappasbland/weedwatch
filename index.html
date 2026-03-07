@@ -1313,7 +1313,12 @@ function closeLightbox(e) {
   document.getElementById('lightboxImg').src = '';
   document.body.style.overflow = '';
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') closeLightbox();
+  if(!document.getElementById('lightbox').classList.contains('visible')) return;
+  if(e.key === 'ArrowLeft') carouselStep(-1);
+  if(e.key === 'ArrowRight') carouselStep(1);
+});
 
 // ═══════════════════════════════════════════════════════════════
 // iNATURALIST
