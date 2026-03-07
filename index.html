@@ -1555,11 +1555,12 @@ async function fetchSpecies() {
     document.getElementById('searchBtn').disabled = false;
     renderSpecies(coords);
   } catch(err) {
+    console.error('fetchSpecies error:', err);
     document.getElementById('searchBtn').disabled = false;
     const e = document.getElementById('errorMsg');
     e.textContent = err.message === 'zip_not_found'
       ? 'Zip code not found. Please check and try again.'
-      : 'Something went wrong. Please try again.';
+      : `Something went wrong: ${err.message}`;
     e.classList.add('visible');
   }
 }
