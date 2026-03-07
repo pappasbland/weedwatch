@@ -1462,9 +1462,40 @@ function renderSpecies(coords) {
   const month = getActiveMonth();
   const season = getActiveSeason(month);
 
-  document.getElementById('regionTitle').textContent = `${coords.city}, ${coords.state}`;
-  document.getElementById('resultsHeadline').textContent = `Make room for your ${coords.city} natives`;
-  document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> Here's what's actionable in your area right now.`;
+  // Curated region descriptions and headlines by zone
+  const zoneRegions = {
+    northeast: [
+      'Mixed hardwood forest & field edge — Southern New England',
+      'Northeastern deciduous woodland & disturbed edge',
+      'New England forest understory & shrubland',
+      'Northern Appalachian woodland & riparian corridor',
+      'Mid-Atlantic forest edge & hedgerow',
+    ]
+  };
+  const headlines = [
+    'Make room for what belongs here.',
+    'Every plant you pull makes space for something native.',
+    'Reclaim your patch — one window at a time.',
+    "What's crowding out your natives, and what you can do about it.",
+    "Your land wants to recover. Here's where to start.",
+  ];
+  const zoneSeasonalNotes = {
+    northeast: {
+      winter: "Woody stems and persistent berries make identification straightforward. Use this quiet season to map what you're dealing with before spring growth obscures structure.",
+      spring: "Many fast-spreading plants leaf out earlier than native species — giving them a head start. The next few weeks are critical for getting ahead of the season.",
+      summer: "Growth is at its peak. Chemical controls are most effective now for woody species. Focus on preventing seed set for herbaceous ones.",
+      fall: "Berries are visible and plants are easy to spot. Severing woody vines now protects trees before winter stress sets in.",
+    }
+  };
+
+  const regionPool = zoneRegions[zone] || zoneRegions.northeast;
+  const regionText = regionPool[Math.floor(Math.random() * regionPool.length)];
+  const headlineText = headlines[Math.floor(Math.random() * headlines.length)];
+  const seasonalNoteText = (zoneSeasonalNotes[zone] || zoneSeasonalNotes.northeast)[season];
+
+  document.getElementById('regionTitle').textContent = regionText;
+  document.getElementById('resultsHeadline').textContent = headlineText;
+  document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> ${seasonalNoteText}`;
 
   const baseUrl = extensionLinks[coords.state];
   const extEl = document.getElementById('extLink');
