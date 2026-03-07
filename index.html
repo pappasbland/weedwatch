@@ -103,9 +103,17 @@
   .timing-ideal   { background:rgba(76,175,125,.15); color:#7dd4a8; border:1px solid rgba(76,175,125,.35); }
   .timing-caution { background:rgba(232,147,10,.12); color:var(--amber); border:1px solid rgba(232,147,10,.3); }
   .timing-poor    { background:rgba(196,83,26,.1); color:#f07050; border:1px solid rgba(196,83,26,.25); }
-  .expand-col { width:36px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .expand-icon { font-size:18px; color:var(--sage); transition:transform .25s; opacity:.6; }
-  .species-card.open .expand-icon { transform:rotate(45deg); opacity:1; }
+  .expand-col { width:48px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .expand-icon {
+    width:36px; height:36px; border-radius:50%;
+    background:rgba(138,171,92,.1); border:2px solid rgba(138,171,92,.3);
+    color:var(--sage); font-size:22px; font-weight:300;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s, border-color .2s, transform .25s;
+    line-height:1; user-select:none;
+  }
+  .species-card:hover .expand-icon { border-color:rgba(138,171,92,.6); background:rgba(138,171,92,.18); }
+  .species-card.open .expand-icon { transform:rotate(45deg); background:rgba(138,171,92,.2); border-color:var(--sage); }
 
   /* ── AI CARD BODY (existing style) ─────────────────────────── */
   .card-body { display:none; padding:0 20px 24px 20px; border-top:1px solid rgba(138,171,92,.1); }
@@ -858,7 +866,7 @@ function timingOrder(rating) {
 function timingConfig(rating) {
   if(!rating) return null;
   const r = rating.toLowerCase();
-  if(r.includes('ideal'))   return { cls:'timing-ideal',   pill:'🟢 Ideal Now',   blockCls:'timing-ideal-block',   icon:'🟢', windowCls:'ctrl-mechanical' };
+  if(r.includes('ideal'))   return { cls:'timing-ideal',   pill:'🟢 Ideal to Manage Now',   blockCls:'timing-ideal-block',   icon:'🟢', windowCls:'ctrl-mechanical' };
   if(r.includes('caution')) return { cls:'timing-caution', pill:'🟡 Caution',     blockCls:'timing-caution-block', icon:'🟡' };
   if(r.includes('poor'))    return { cls:'timing-poor',    pill:'🔴 Poor Timing', blockCls:'timing-poor-block',    icon:'🔴' };
   return null;
