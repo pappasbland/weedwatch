@@ -69,6 +69,15 @@
 
   .card-header { display:flex; align-items:stretch; cursor:pointer; user-select:none; min-height:88px; }
   .hero-wrap { width:110px; flex-shrink:0; position:relative; overflow:hidden; background:rgba(255,255,255,.03); border-right:1px solid rgba(138,171,92,.1); }
+
+  /* Mobile: hero full width stacked above meta */
+  @media(max-width:580px) {
+    .card-header { flex-wrap:wrap; min-height:auto; }
+    .hero-wrap { width:100%; height:180px; border-right:none; border-bottom:1px solid rgba(138,171,92,.1); order:-1; }
+    .rank-badge { order:0; }
+    .card-meta { order:1; }
+    .expand-col { order:2; }
+  }
   .hero-img { width:100%; height:100%; object-fit:cover; display:block; opacity:0; transition:opacity .5s ease; }
   .hero-img.loaded { opacity:1; }
   .hero-placeholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:28px; opacity:.15; }
@@ -171,13 +180,16 @@
   }
   .control-window:last-of-type { border-bottom:none; }
   .window-header {
-    display:flex; align-items:center; gap:8px;
-    flex-wrap:wrap; margin-bottom:10px;
+    display:flex; flex-direction:column; gap:6px;
+    margin-bottom:10px;
   }
   .window-title {
     font-family:'Playfair Display',serif;
     font-size:15px; font-weight:700; color:var(--cream);
-    flex:1; min-width:0;
+    line-height:1.3;
+  }
+  .window-pills {
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
   }
   .window-method {
     font-family:'DM Mono',monospace; font-size:9px;
@@ -307,18 +319,30 @@
   .footer-ext a:hover { color:var(--cream); }
   .footer-note { margin-top:16px; font-family:'DM Mono',monospace; font-size:10px; color:rgba(184,201,154,.4); letter-spacing:.04em; line-height:1.8; }
 
-  /* Lightbox */
-  .lightbox { display:none; position:fixed; inset:0; z-index:1000; background:rgba(10,8,4,.92); align-items:center; justify-content:center; padding:24px; }
+  /* Lightbox + Carousel */
+  .lightbox { display:none; position:fixed; inset:0; z-index:1000; background:rgba(10,8,4,.95); align-items:center; justify-content:center; padding:24px; }
   .lightbox.visible { display:flex; animation:fadeIn .2s ease; }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-  .lightbox-inner { position:relative; max-width:100%; max-height:100%; display:flex; flex-direction:column; align-items:center; gap:12px; }
-  .lightbox-img { max-width:min(860px,90vw); max-height:80vh; object-fit:contain; border-radius:4px; display:block; }
+  .lightbox-inner { position:relative; max-width:100%; max-height:100%; display:flex; flex-direction:column; align-items:center; gap:12px; width:min(860px,90vw); }
+  .lightbox-img-wrap { position:relative; width:100%; display:flex; align-items:center; justify-content:center; }
+  .lightbox-img { max-width:100%; max-height:75vh; object-fit:contain; border-radius:4px; display:block; transition:opacity .2s; }
+  .lightbox-img.fading { opacity:0; }
+  .lightbox-arrow { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--cream); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; z-index:10; user-select:none; }
+  .lightbox-arrow:hover { background:rgba(255,255,255,.22); }
+  .lightbox-arrow.prev { left:-22px; }
+  .lightbox-arrow.next { right:-22px; }
+  .lightbox-arrow:disabled { opacity:.2; cursor:default; }
+  .lightbox-counter { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; color:rgba(255,255,255,.35); }
   .lightbox-caption { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; color:rgba(255,255,255,.5); text-align:center; }
   .lightbox-caption a { color:rgba(138,171,92,.7); text-decoration:none; border-bottom:1px solid rgba(138,171,92,.3); }
   .lightbox-caption a:hover { color:var(--sage); }
   .lightbox-close { position:absolute; top:-16px; right:-16px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:var(--cream); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; }
   .lightbox-close:hover { background:rgba(255,255,255,.2); }
   .lightbox-name { font-family:'Playfair Display',serif; font-size:18px; font-style:italic; color:var(--cream); text-align:center; }
+  @media(max-width:580px) {
+    .lightbox-arrow.prev { left:-16px; }
+    .lightbox-arrow.next { right:-16px; }
+  }
 
   /* ── DEV PANEL ──────────────────────────────────────────────── */
   .dev-panel {
@@ -427,7 +451,12 @@
   <div class="lightbox-inner">
     <button class="lightbox-close" onclick="closeLightbox()">✕</button>
     <div class="lightbox-name" id="lightboxName"></div>
-    <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+    <div class="lightbox-img-wrap">
+      <button class="lightbox-arrow prev" id="lightboxPrev" onclick="carouselStep(-1)">‹</button>
+      <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+      <button class="lightbox-arrow next" id="lightboxNext" onclick="carouselStep(1)">›</button>
+    </div>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
     <div class="lightbox-caption" id="lightboxCaption"></div>
   </div>
 </div>
@@ -940,9 +969,11 @@ function renderCuratedCard(sp, index, coords) {
       <div class="control-window">
         <div class="window-header">
           <span class="window-title">${w.title}</span>
-          <span class="timing-pill ${wTc ? wTc.cls : ''}">${comingSoon ? (wTc ? wTc.cls.includes('ideal') ? '🟢 Ideal Window Coming Soon' : wTc.cls.includes('caution') ? '🟡 Caution Window Coming Soon' : '🔴 Window Coming Soon' : w.rating) : (wTc ? wTc.pill : w.rating)}</span>
-          <span class="window-method ${wMethodCls}">${w.method}</span>
-          <span class="window-months">${wMonthNames}</span>
+          <div class="window-pills">
+            <span class="timing-pill ${wTc ? wTc.cls : ''}">${comingSoon ? (wTc ? wTc.cls.includes('ideal') ? '🟢 Ideal Window Coming Soon' : wTc.cls.includes('caution') ? '🟡 Caution Window Coming Soon' : '🔴 Window Coming Soon' : w.rating) : (wTc ? wTc.pill : w.rating)}</span>
+            <span class="window-method ${wMethodCls}">${w.method}</span>
+            <span class="window-months">${wMonthNames}</span>
+          </div>
         </div>
         ${block1}
         ${block2}
@@ -1056,7 +1087,7 @@ function renderCuratedCard(sp, index, coords) {
       const parentCard = wrap.closest('.species-card');
       if(!parentCard || !parentCard.classList.contains('open')) return;
       e.stopPropagation();
-      openLightbox(img.dataset.large, img.dataset.obsurl, img.dataset.observer, img.dataset.name);
+      openLightbox(img.dataset.large, img.dataset.obsurl, img.dataset.observer, img.dataset.name, sp.latinName, coords.lat, coords.lon, month);
     });
   });
 
@@ -1158,19 +1189,78 @@ function goHome() {
 // ═══════════════════════════════════════════════════════════════
 // LIGHTBOX
 // ═══════════════════════════════════════════════════════════════
-function openLightbox(largeSrc, obsUrl, observer, name) {
-  document.getElementById('lightboxImg').src=largeSrc;
-  document.getElementById('lightboxImg').alt=name;
-  document.getElementById('lightboxName').textContent=name;
-  document.getElementById('lightboxCaption').innerHTML=`© <a href="${obsUrl}" target="_blank">${observer} on iNaturalist →</a>`;
-  document.getElementById('lightbox').classList.add('visible');
-  document.body.style.overflow='hidden';
+// ═══════════════════════════════════════════════════════════════
+// LIGHTBOX CAROUSEL
+// ═══════════════════════════════════════════════════════════════
+let _carousel = { photos: [], index: 0, name: '' };
+
+async function fetchCarouselPhotos(latinName, lat, lon, month) {
+  const months = [month, month===1?12:month-1, month===12?1:month+1];
+  const results = [];
+  for(const m of months) {
+    try {
+      const url = new URL('https://api.inaturalist.org/v1/observations');
+      url.searchParams.set('taxon_name', latinName);
+      url.searchParams.set('lat', lat);
+      url.searchParams.set('lng', lon);
+      url.searchParams.set('radius', 200);
+      url.searchParams.set('month', m);
+      url.searchParams.set('quality_grade', 'research');
+      url.searchParams.set('photos', true);
+      url.searchParams.set('order_by', 'votes');
+      url.searchParams.set('per_page', 4);
+      const r = await fetch(url);
+      const d = await r.json();
+      if(d.results) {
+        for(const obs of d.results) {
+          if(obs.photos && obs.photos.length) {
+            results.push({ src: obs.photos[0].url.replace('square','large'), observer: obs.user.login, obsId: obs.id });
+          }
+        }
+      }
+    } catch(e) {}
+  }
+  const seen = new Set();
+  return results.filter(p => { if(seen.has(p.obsId)) return false; seen.add(p.obsId); return true; }).slice(0,10);
 }
+
+function renderCarouselFrame() {
+  const { photos, index, name } = _carousel;
+  const photo = photos[index];
+  const img = document.getElementById('lightboxImg');
+  img.classList.add('fading');
+  setTimeout(() => { img.src = photo.src; img.alt = name; img.classList.remove('fading'); }, 150);
+  document.getElementById('lightboxCaption').innerHTML = `© <a href="https://www.inaturalist.org/observations/${photo.obsId}" target="_blank">${photo.observer} on iNaturalist →</a>`;
+  document.getElementById('lightboxCounter').textContent = photos.length > 1 ? `${index + 1} / ${photos.length}` : '';
+  document.getElementById('lightboxPrev').disabled = index === 0;
+  document.getElementById('lightboxNext').disabled = index === photos.length - 1;
+}
+
+function carouselStep(dir) {
+  const next = _carousel.index + dir;
+  if(next < 0 || next >= _carousel.photos.length) return;
+  _carousel.index = next;
+  renderCarouselFrame();
+}
+
+function openLightbox(largeSrc, obsUrl, observer, name, latinName, lat, lon, month) {
+  _carousel = { photos: [{ src: largeSrc, observer, obsId: obsUrl.split('/').pop() }], index: 0, name };
+  document.getElementById('lightboxName').textContent = name;
+  document.getElementById('lightbox').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+  renderCarouselFrame();
+  if(latinName && lat && lon && month) {
+    fetchCarouselPhotos(latinName, lat, lon, month).then(photos => {
+      if(photos.length > 1) { _carousel.photos = photos; renderCarouselFrame(); }
+    });
+  }
+}
+
 function closeLightbox(e) {
-  if(e&&e.target.classList.contains('lightbox-img')) return;
+  if(e && e.target.classList.contains('lightbox-img')) return;
   document.getElementById('lightbox').classList.remove('visible');
-  document.getElementById('lightboxImg').src='';
-  document.body.style.overflow='';
+  document.getElementById('lightboxImg').src = '';
+  document.body.style.overflow = '';
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
 
