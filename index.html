@@ -806,6 +806,112 @@ const SPECIES_DB = [
       keyFeatures: ['Single sharp spine at each node — diagnostic','Bright red elongated berries persisting through winter','Yellow inner wood and roots when cut','Small oval leaves often with reddish or purple tint','Dense rounded low form'],
       lookAlikesNote: 'Native shrub roses also have thorns but rose thorns are curved and occur along the stem rather than as single spines at nodes. Common Barberry (Berberis vulgaris, also non-native) has three-pronged spines — also remove if found.'
     }
+  },
+  {
+    id: 'rosa-multiflora',
+    commonName: 'Multiflora Rose',
+    latinName: 'Rosa multiflora',
+    zones: ['northeast'],
+    spreadRate: 'Aggressive',
+    isEdible: true,
+    mechanicalFutile: false,
+    callAPro: false,
+    ecology: {
+      whyItSpreads: 'Each plant produces thousands of small rose hips that birds eat and disperse widely. Canes also tip-root wherever they touch the ground, and the plant resprouts vigorously from the root crown after cutting — making a single removal rarely sufficient. Originally planted for erosion control and wildlife habitat, it now dominates roadsides, field edges, and forest margins across the Northeast.',
+      whatItDisplaces: 'Native shrub layer species including native roses, viburnums, elderberry, and spicebush. Dense thickets shade out wildflowers and native grasses, eliminate understory diversity, and significantly degrade habitat quality for ground-nesting birds despite the common misconception that its berries benefit wildlife.',
+      howToIdentify: 'Arching canes up to 15 feet with recurved thorns. Compound leaves with 7–9 toothed leaflets. The most diagnostic feature is the fringed (pectinate) stipule at the base of each leaf stem — a comb-like fringe no native rose has. Clusters of small white to pink five-petaled flowers in late spring. Small red rose hips in dense clusters persisting through winter.'
+    },
+    controlWindows: [
+      {
+        months: [3, 4],
+        method: 'Mechanical',
+        rating: 'Ideal',
+        title: 'Root crown removal before leaf-out',
+        phenologyCue: 'When forsythia blooms and the ground has thawed, Multiflora Rose root crowns are exposed and accessible before the canes leaf out and make the interior impenetrable. This is your cleanest mechanical window.',
+        description: 'Cut all canes back to 6 inches first to make the root crown accessible — the interior of an established plant is nearly impenetrable without doing this. Then use a Weed Wrench, mattock, or heavy spade to lever out the full root crown. A Weed Wrench works well on younger plants whose trunk diameter fits the tool. Established plants with thick crowns will resist wrenching — switch to mattock and dig. Work around the full crown perimeter before levering.',
+        whyNow: 'The plant has not yet leafed out, making the structure visible and accessible. Ground is workable. The root crown has not yet invested energy in spring growth — removing it now prevents that energy expenditure entirely.',
+        watchFor: 'The fringed stipules at leaf bases are visible on emerging growth — this confirms identification before the plant fully leafs out. Forsythia in bloom is your phenological signal.',
+        disposal: 'Bag root crowns for landfill. Cane material can be left to dry — unlike seeds or root fragments, cut canes do not resprout once fully severed from the crown. Do not leave root crowns on the surface — they can reestablish in moist soil.',
+        doNotDo: 'Do not attempt removal in short sleeves or without eye protection. The recurved thorns grab aggressively and canes whip back. Do not assume a single removal is sufficient — monitor the site and return for any resprouting.'
+      },
+      {
+        months: [5, 6, 7, 8, 9],
+        method: 'Mechanical',
+        rating: 'Caution',
+        title: 'Repeated cutting — multi-year commitment',
+        phenologyCue: 'Once the plant is in full leaf, digging becomes very difficult. Repeated cutting is the realistic mechanical option for the growing season — but only commit if you can return consistently.',
+        description: 'Cut all canes to ground level. Return every 4–6 weeks and cut all resprouting growth back to the ground again. The goal is to exhaust the root crown\'s energy reserves by preventing it from ever photosynthesizing. This takes multiple growing seasons — typically 3–5 years of consistent cutting before the plant gives up. Do not skip seasons or the root crown rebuilds its reserves and you lose ground.',
+        whyNow: 'Cutting alone during the growing season is possible but the plant resprouts quickly and vigorously. This method requires sustained commitment over multiple years. It is most appropriate where digging is impractical and chemical treatment is not an option — near water, in dense plantings, or where you prefer not to use herbicides.',
+        watchFor: 'Regrowth will appear within weeks. Thin whippy resprouting canes from the crown are your signal to return. Do not let resprouting canes develop leaves for more than a few weeks before cutting again.',
+        disposal: 'Cut cane material can be left on site to dry — it will not resprout. Do not leave crowns in place if you have dug any — bag and landfill.',
+        doNotDo: 'Do not start this method unless you can commit to returning every 4–6 weeks for multiple seasons. A single cutting followed by abandonment simply stimulates vigorous resprouting and may make the infestation worse. Do not cut once a season and consider it managed.'
+      },
+      {
+        months: [10, 11],
+        method: 'Mechanical',
+        rating: 'Ideal',
+        title: 'Fall root crown removal',
+        phenologyCue: 'After the first frost the leaves drop and the full structure of every plant becomes visible. The hips glow red against bare stems. This is your second ideal mechanical window — and the plant is now the most identifiable it will be all year.',
+        description: 'Same approach as the spring window — cut canes back first, then dig or wrench the root crown. The fall advantage is complete visibility: you will find plants you missed in spring. Ground is still workable before hard freeze. Work through the full site systematically now that nothing obscures your view.',
+        whyNow: 'Post-frost leaf drop reveals every plant. The dense red hip clusters make Multiflora Rose unmistakable from a distance. Ground is workable. Removing crowns now means no spring energy investment from this plant next year.',
+        watchFor: 'Dense clusters of small red hips on arching bare canes are unmistakable. Look along field edges, fence lines, and forest margins — you will find plants you walked past all summer.',
+        disposal: 'Bag root crowns for landfill. Hips contain viable seeds — do not compost or leave on surface. Cane material without hips can be left to dry.',
+        doNotDo: 'Do not wait past the first hard freeze — ground workability drops quickly. Do not bag cane material that still has hips attached without securing the bags — birds will find them.'
+      },
+      {
+        months: [8, 9, 10, 11],
+        method: 'Chemical',
+        rating: 'Ideal',
+        title: 'Cut-stump triclopyr — late season into dormancy',
+        phenologyCue: 'From late summer through dormancy, the plant is moving energy downward into its roots. Cut-stump triclopyr applied in this window travels with that flow directly into the root system.',
+        description: 'Cut all canes to ground level and apply a 25% triclopyr solution (Garlon 3A or equivalent) to the freshly cut stump surface immediately — within minutes of the cut. Cover the entire cut surface including the cambium ring at the outer edge. Do not delay application. Treat every stem — any untreated stem will resprout. For large infestations this is the most practical approach when mechanical removal of the full crown is not feasible.',
+        whyNow: 'Late growing season into dormancy is the most effective window for cut-stump treatment. The plant is actively transporting sugars and energy downward into roots — herbicide applied to the cut surface travels with this flow. Earlier in the season the plant is growing upward and the transport is less favorable.',
+        watchFor: 'Monitor treated stumps the following spring. Any resprouting indicates an untreated stem or incomplete coverage. Retreat immediately.',
+        disposal: 'Leave treated stumps in place. Do not disturb treated material. Dead cane structure can be removed the following season once you have confirmed no resprouting.',
+        doNotDo: 'Do not apply to wet cut surfaces or in rain — dilution reduces effectiveness significantly. Do not treat near water without a licensed applicator. Do not apply foliar spray — cut-stump is more targeted and effective for this species.',
+        toolsKey: 'cut-stump'
+      }
+    ],
+    tickNote: 'Multiflora Rose thickets are prime tick habitat — dense, humid, with abundant small mammal activity underneath. Deer shelter in them, mice nest in them, and ticks quest on the outer cane tips at exactly the height of human legs and hands. Wear tick repellent, tuck pants into socks, and do a full body check after every removal session. The removal work itself puts you at elevated tick exposure.',
+    tools: {
+      required: ['Puncture-resistant or thick leather gloves — non-negotiable','Long sleeves — thorn-proof or heavy canvas strongly recommended','Eye protection — canes whip back aggressively','Loppers to cut canes back before digging','Heavy duty contractor bags (not standard lawn bags)'],
+      recommended: ['Weed Wrench for younger plants whose trunk fits the tool','Mattock or heavy spade for established root crowns','Pruning saw for thick old canes','Long-handled loppers for reaching into the interior without contact'],
+      notes: 'Cut canes back before attempting root removal — trying to dig an unleafed or fully caned plant without clearing it first is a losing battle. A Weed Wrench is effective on younger plants but established crowns with thick trunks will need a mattock. If the crown resists everything mechanical, cut-stump chemical treatment is the practical path forward.'
+    },
+    foragingNote: 'Rose hips are edible and nutritious, but Multiflora hips are very small. As forager Leda Meredith notes, practical foragers will stick to large-fruited species like Rosa rugosa. Your time here is better spent eradicating than foraging.',
+    photoTerms: {
+      '1': 'cane hip winter', '2': 'cane hip winter', '3': 'cane stem',
+      '4': 'leaf stipule', '5': 'flower bloom',
+      '6': 'flower bloom', '7': 'green hip',
+      '9': 'red hip', '10': 'red hip', '11': 'red hip cane', '12': 'red hip cane'
+    },
+    identification: {
+      byMonth: {
+        '1':  'Arching bare canes with recurved thorns and dense clusters of small red hips — highly visible against snow. One of the easiest winter IDs.',
+        '2':  'Same as January — hips persisting, birds feeding on them. Cane structure unmistakable.',
+        '3':  'Hips still present, small leaves beginning to emerge at nodes. Fringed stipules visible at leaf bases — diagnostic.',
+        '4':  'Leafing out rapidly — compound leaves with 7–9 leaflets, fringed stipules at each leaf base. Act now before interior becomes impenetrable.',
+        '5':  'Flower buds forming. Clusters of small white to pink buds at cane tips. Window for mechanical work narrowing.',
+        '6':  'Peak bloom — clusters of small white five-petaled flowers with yellow centers. Highly visible and fragrant. Mechanical window effectively closed.',
+        '7':  'Flowers fading, small green hips forming. Dense leafy thicket, difficult to work in.',
+        '8':  'Green hips sizing up. Full dense canopy. Cut-stump chemical window opening.',
+        '9':  'Hips beginning to redden. Chemical window ideal. Start planning fall mechanical work.',
+        '10': 'Red hips fully developed, leaves dropping. Every plant announces itself. Best fall mechanical window.',
+        '11': 'Leaves mostly gone, bare canes with red hips fully visible. Final mechanical window before ground freezes.',
+        '12': 'Bare canes with persistent red hips. Map every plant for spring action.'
+      }
+    },
+    windowTools: {
+      'cut-stump': {
+        required: ['Loppers or pruning saw to cut canes','Triclopyr concentrate (Garlon 3A or equivalent)','Small paintbrush or dauber for stump application','Nitrile gloves over work gloves for chemical handling','Eye protection'],
+        recommended: ['Plastic bag to cover treated stumps if rain is forecast','Flagging tape to mark treated plants for spring monitoring'],
+        notes: 'Mix triclopyr at 25% concentration. Apply within minutes of the cut — do not batch-cut and then apply. Work plant by plant: cut, apply, move on.'
+      }
+    },
+    quiz: {
+      keyFeatures: ['Fringed (pectinate) stipules at leaf base — no native rose has this','Recurved thorns on arching canes','Clusters of small red hips persisting through winter','Compound leaves with 7–9 leaflets','White to pink five-petaled flowers in dense clusters'],
+      lookAlikesNote: 'Native roses (Rosa palustris, Rosa carolina) have similar flowers but lack the distinctive fringed stipules. If you see the comb-like fringe at the base of each leaf stem, it is Multiflora Rose.'
+    }
   }
 ];
 
