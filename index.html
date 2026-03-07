@@ -400,19 +400,13 @@
   </header>
 
   <section class="search-section" id="searchSection">
-    <label class="search-label" for="zipInput">Enter your zip code to see what's crowding out natives near you</label>
+    <label class="search-label" for="zipInput">Enter your zip code to see what's crowding out natives near you, and what you can do about it.</label>
     <div class="zip-row">
       <input class="zip-input" id="zipInput" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="12345" />
-      <button class="search-btn" id="searchBtn" onclick="fetchSpecies()">Show What's Taking Over →</button>
+      <button class="search-btn" id="searchBtn" onclick="fetchSpecies()">How can I make an impact today? →</button>
     </div>
     <div class="error-msg" id="errorMsg"></div>
   </section>
-
-  <div class="loading" id="loading">
-    <div class="loading-main">Building your regional guide<span class="loading-dots" id="dots">...</span></div>
-    <div class="loading-prompt" id="loadingPrompt"></div>
-    <div class="loading-wait" id="loadingWait">This usually takes 1–2 minutes — we're building a detailed guide just for your region.</div>
-  </div>
 
   <div id="results">
     <div class="results-header">
@@ -423,7 +417,7 @@
     <div class="species-grid" id="speciesGrid"></div>
     <div class="footer-ext" id="extLink"></div>
     <div class="footer-note">
-      Curated species entries are expert-reviewed. Additional species information is AI-generated based on regional ecology and current season. Always verify control methods with your local extension service before acting. Photos via iNaturalist (CC BY-NC).
+      Species information is expert-reviewed and updated seasonally. Always verify control methods with your local extension service before acting. Photos via iNaturalist (CC BY-NC).
     </div>
   </div>
 </div>
@@ -780,7 +774,7 @@ function setDevMonth(m) {
   // If results are showing, re-render with new month
   if(document.getElementById('results').classList.contains('visible')) {
     const cachedState = window._lastRenderState;
-    if(cachedState) renderSpecies(cachedState.data, cachedState.coords);
+    if(cachedState) renderSpecies(cachedState.coords);
   }
 }
 
@@ -789,7 +783,7 @@ function resetDevMonth() {
   document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('active'));
   if(document.getElementById('results').classList.contains('visible')) {
     const cachedState = window._lastRenderState;
-    if(cachedState) renderSpecies(cachedState.data, cachedState.coords);
+    if(cachedState) renderSpecies(cachedState.coords);
   }
 }
 
@@ -1314,46 +1308,39 @@ async function zipToCoords(zip) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RENDER
+// RENDER — curated only
 // ═══════════════════════════════════════════════════════════════
-function renderSpecies(data, coords) {
-  // Cache render state so dev month override can re-render
-  window._lastRenderState = { data, coords };
+function renderSpecies(coords) {
+  window._lastRenderState = { coords };
 
   const month = getActiveMonth();
   const season = getActiveSeason(month);
 
-  document.getElementById('regionTitle').textContent = data.region;
-  document.getElementById('resultsHeadline').textContent = data.headline;
-  document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> ${data.seasonalNote}`;
+  document.getElementById('regionTitle').textContent = `${coords.city}, ${coords.state}`;
+  document.getElementById('resultsHeadline').textContent = `Make room for your ${coords.city} natives`;
+  document.getElementById('seasonalNote').innerHTML = `<strong>${seasonEmoji[season]} ${cap(season)} field note:</strong> Here's what's actionable in your area right now.`;
 
   const baseUrl = extensionLinks[coords.state];
   const extEl = document.getElementById('extLink');
   if(baseUrl) {
     extEl.innerHTML = `🌿 <strong>Your local expert resource:</strong> <a href="${baseUrl}" target="_blank">${coords.state} Cooperative Extension →</a><br><span style="font-size:10px;opacity:.65;font-style:italic;">Free identification help, control advice, and native plant recommendations specific to your state.</span>`;
   } else {
-    extEl.style.display='none';
+    extEl.style.display = 'none';
   }
 
-  // Build set of latin names in our DB for this zone
   const zone = getZone(coords.state);
   const dbSpecies = SPECIES_DB.filter(sp => sp.zones.includes(zone));
-  const dbLatinNames = new Set(dbSpecies.map(sp => sp.latinName.toLowerCase()));
-
-  // Filter Claude results — remove any that are in our DB (no duplicates)
-  const aiSpecies = (data.species||[]).filter(sp => !dbLatinNames.has(sp.latinName.toLowerCase()));
-
-  // Sort AI species by timing
-  const sorted = [...aiSpecies].sort((a,b) => timingOrder(a.controlTiming)-timingOrder(b.controlTiming));
-  const seen = new Set();
-  const deduped = sorted.filter(sp => {
-    const key = sp.latinName.toLowerCase();
-    if(seen.has(key)) return false;
-    seen.add(key); return true;
-  });
 
   const grid = document.getElementById('speciesGrid');
   grid.innerHTML = '';
+
+  dbSpecies.forEach((sp, i) => {
+    const card = renderCuratedCard(sp, i, coords);
+    if(card) grid.appendChild(card);
+  });
+
+  document.getElementById('results').classList.add('visible');
+}
 
   // Render DB cards first — renderCuratedCard returns null if species hidden this month
   let visibleDbCount = 0;
@@ -1453,112 +1440,36 @@ function renderSpecies(data, coords) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FETCH
+// FETCH — curated only, no Claude API
 // ═══════════════════════════════════════════════════════════════
 async function fetchSpecies() {
-  const zip=document.getElementById('zipInput').value.trim();
-  if(!/^\d{5}$/.test(zip)){
-    const e=document.getElementById('errorMsg');
-    e.textContent='Please enter a valid 5-digit US zip code.';
+  const zip = document.getElementById('zipInput').value.trim();
+  if(!/^\d{5}$/.test(zip)) {
+    const e = document.getElementById('errorMsg');
+    e.textContent = 'Please enter a valid 5-digit US zip code.';
     e.classList.add('visible'); return;
   }
   document.getElementById('errorMsg').classList.remove('visible');
   document.getElementById('results').classList.remove('visible');
-  document.getElementById('loading').classList.add('visible');
-  document.getElementById('searchBtn').disabled=true;
-  startLoading();
+  document.getElementById('searchBtn').disabled = true;
 
-  const season=getActiveSeason();
-  const today=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-
-  try{
-    const coords=await zipToCoords(zip);
-    const cached=readCache(zip);
-    if(cached){
-      stopLoading();
-      document.getElementById('loading').classList.remove('visible');
-      document.getElementById('searchBtn').disabled=false;
-      renderSpecies(cached.data,cached.coords);
-      return;
-    }
-
-    buildPromptPool(coords.state);
-
-    const prompt=`You are an expert botanist, native plant advocate, and restoration ecologist for the United States.
-
-A home gardener wants to help native plants, pollinators, and local wildlife by learning which fast-spreading plants are crowding out natives on their property. Your tone is empowering, warm, and practical.
-
-Zip code: ${zip} (${coords.city}, ${coords.state})
-Today's date: ${today}
-Current season: ${season}
-
-CRITICAL LANGUAGE RULES:
-- Never use the word "invasive" anywhere in your response
-- The headline must be warm and empowering, focused on what the gardener is making room FOR
-- Every species in the list must be unique — never repeat the same plant twice
-
-SEASONAL CONTROL TIMING — use exactly these three values:
-- "Ideal" = one of the best windows of the year for mechanical or cultural control
-- "Caution" = action is possible but timing is not optimal
-- "Poor" = acting now is ineffective or could make things worse
-
-Return ONLY a raw JSON object (no markdown, no backticks):
-{
-  "region": "Specific region name",
-  "headline": "Short warm empowering phrase",
-  "seasonalNote": "One sentence about what fast-spreading plants are doing RIGHT NOW in ${season} in this region",
-  "species": [
-    {
-      "commonName": "Common name",
-      "latinName": "Genus species",
-      "spreadRate": "Aggressive" or "Persistent" or "Spreading",
-      "isEdible": true or false,
-      "foragingNote": "Only if isEdible",
-      "controlTiming": "Ideal" or "Caution" or "Poor",
-      "controlTimingReason": "One clear sentence explaining why",
-      "whyItSpreads": "2 sentences",
-      "howToIdentify": "2-3 sentences",
-      "seasonalTip": "What this plant looks like RIGHT NOW and the single most useful action today",
-      "whatItDisplaces": "1-2 sentences",
-      "controls": [
-        { "type": "Mechanical", "description": "Specific technique with disposal instructions" },
-        { "type": "Cultural", "description": "Native planting or ecological approaches" },
-        { "type": "Chemical", "description": "Last resort only" }
-      ]
-    }
-  ]
-}
-
-Return the 10 most ecologically impactful fast-spreading plants for this region ordered by ecological impact. Be concise. Be precise to this location's actual ecology.`;
-
-    const resp=await fetch('/api/species',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
-    const aiData=await resp.json();
-    if(!resp.ok) throw new Error('API error');
-    if(aiData.stop_reason==='max_tokens') throw new Error('truncated');
-    const text=aiData.content.map(b=>b.text||'').join('');
-    const clean=text.replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(clean);
-
-    writeCache(zip,{data:parsed,coords});
-    stopLoading();
-    document.getElementById('loading').classList.remove('visible');
-    document.getElementById('searchBtn').disabled=false;
-    renderSpecies(parsed,coords);
-
-  }catch(err){
-    stopLoading();
-    document.getElementById('loading').classList.remove('visible');
-    document.getElementById('searchBtn').disabled=false;
-    const e=document.getElementById('errorMsg');
-    if(err.message==='zip_not_found') e.textContent='Zip code not found. Please check and try again.';
-    else if(err.message==='truncated') e.textContent='Response was cut off — please try again.';
-    else e.textContent='Something went wrong generating your plant guide. Please try again.';
+  try {
+    const coords = await zipToCoords(zip);
+    document.getElementById('searchBtn').disabled = false;
+    renderSpecies(coords);
+  } catch(err) {
+    document.getElementById('searchBtn').disabled = false;
+    const e = document.getElementById('errorMsg');
+    e.textContent = err.message === 'zip_not_found'
+      ? 'Zip code not found. Please check and try again.'
+      : 'Something went wrong. Please try again.';
     e.classList.add('visible');
-    console.error(err);
   }
 }
 
-document.getElementById('zipInput').addEventListener('keydown',e=>{if(e.key==='Enter')fetchSpecies();});
+document.getElementById('zipInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter') fetchSpecies();
+});
 </script>
 </body>
 </html>
